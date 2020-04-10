@@ -2,8 +2,7 @@
 ROS-based second-generation command & control system for marine vehicles
 
 ## Contributing
-Please follow the following guideline when contributing to the repo
-https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
+Please [follow the following guideline](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) when contributing to the repo
 
 In summary
 1. Main collaboration branch is in **dev**. 
