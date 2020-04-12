@@ -1,0 +1,27 @@
+.gauge g.arc {
+    fill: steelblue;
+}
+
+.gauge g.pointer {
+    fill: #e85116;
+    stroke: #b64011;
+}
+
+.gauge g.pointer2 {
+    fill: #000000;
+    stroke: #000000;
+}
+
+.gauge g.label text {
+    text-anchor: middle;
+    font-size: 14px;
+    font-weight: bold;
+    fill: #666;
+}
+
+.gauge g.gaugeVal text {
+    text-anchor: middle;
+    font-size: 14px;
+    font-weight: bold;
+    fill: #666;
+}
