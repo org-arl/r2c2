@@ -10,13 +10,21 @@ See also [Create React App](https://create-react-app.dev/).
 * Node.js
 * npm
 
+### Download simulator
+
+* https://github.com/org-arl/r2c2/releases/download/starfish-simulator-20200417-1230/starfish-simulator.zip
+
 ### Install packages
+
+Only when changes are made in `package.json`.
 
 ```
 npm install
 ```
 
 ### Start development server
+
+Start the simulator, then:
 
 ```
 npm run start
