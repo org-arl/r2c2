@@ -15,7 +15,7 @@ import { Row, Container, Dropdown, Button } from 'react-bootstrap';
 import { StyleSheet, css } from 'aphrodite';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCrosshairs } from '@fortawesome/free-solid-svg-icons'
+import { faCrosshairs, faUndo, faSave, faWindowClose } from '@fortawesome/free-solid-svg-icons'
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -72,9 +72,14 @@ class MapComponent extends React.Component {
 			polylineArray: [],
 			pathLimit: 1000,
 			missionPoints: [],
+			MissionPointsMarkers: [],
 			displayGeoFence: true,
 			displayMissionPts: true,
-			displayVehiclePath: true
+			displayVehiclePath: true,
+			displayVehicle: true,
+
+			drawingGeoFence: false,
+			drawGeoFence: []
 
 		};
 
@@ -88,6 +93,13 @@ class MapComponent extends React.Component {
 		this.toggleGeoFence = this.toggleGeoFence.bind(this);
 		this.toggleMissionPts = this.toggleMissionPts.bind(this);
 		this.toggleVehiclePath = this.toggleVehiclePath.bind(this);
+
+		this.enableDrawGeofence = this.enableDrawGeofence.bind(this);
+		this.undoGeoFencePoint = this.undoGeoFencePoint.bind(this);
+		this.saveNewGeoFence = this.saveNewGeoFence.bind(this);
+		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
+
+		this.mapOnClick = this.mapOnClick.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
@@ -278,6 +290,7 @@ class MapComponent extends React.Component {
 	}
 
 	viewMission(num){
+		// TODO: mission not being shown in first function call. Displays only on second call.
 
 		this.missionNumber = num;
 
@@ -293,14 +306,14 @@ class MapComponent extends React.Component {
 		this.setState({
 			missionPoints: this.missions[this.missionNumber]
 		});
-		this.MissionPointsMarkers = [];
+		var MissionPointsMarkers = [];
 		this.missionPointsArray = [];
 		for (var i=0; i < this.state.missionPoints.length; i++){
 
 			var lat = this.coordSys.locy2lat(this.state.missionPoints[i].mp.y);
 			var long = this.coordSys.locx2long(this.state.missionPoints[i].mp.x);
 			this.missionPointsArray.push([lat, long]);
-			this.MissionPointsMarkers.push(
+			MissionPointsMarkers.push(
 				<Marker icon={mapPin} key={i} position={[lat, long]}>
 					<Popup>
 						Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)} <br/>
@@ -309,6 +322,9 @@ class MapComponent extends React.Component {
 				</Marker>
 			);
 		}
+		this.setState({
+			MissionPointsMarkers: MissionPointsMarkers
+		});
 	}
 
 	recentreMap(e){
@@ -342,6 +358,37 @@ class MapComponent extends React.Component {
 		}
 	}
 
+	enableDrawGeofence(e){
+		this.setState({
+			drawingGeoFence: true
+		})
+	}
+
+	undoGeoFencePoint() {
+		var array = [...this.state.drawGeoFence];
+		if (array.length > 0) {
+			array.splice(-1, 1);
+			this.setState({drawGeoFence: array});
+		}
+	}
+
+	saveNewGeoFence(e){
+		// TODO: add code to save geofence on vehicle and replace current geofence.
+
+		this.setState({
+			drawingGeoFence: false,
+			// geoFenceCoordinates: this.state.drawGeoFence,
+			drawGeoFence: []
+		});
+	}
+
+	cancelNewGeoFence(e){
+		this.setState({
+			drawingGeoFence: false,
+			drawGeoFence: []
+		});
+	}
+
 	openNewWindow(tab) {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
@@ -349,7 +396,12 @@ class MapComponent extends React.Component {
 	}
 
 	mapOnClick(e) {
-		console.log("You clicked the map at " + e.latlng);
+		console.log(e.latlng);
+		if (this.state.drawingGeoFence) {
+			this.setState({
+				drawGeoFence: [...this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]]
+			});
+		}
 	}
 
 	render() {
@@ -360,13 +412,28 @@ class MapComponent extends React.Component {
 			<div key={index}> {index+1} <Button onClick={() => this.viewMission(index)}>View</Button> <Button onClick={() => this.runMission(index)}>Run</Button></div>
 		);
 
-		const geoFence = this.state.displayGeoFence ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
+		const geoFence = (this.state.displayGeoFence && !this.state.drawingGeoFence) ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
 
-		const missionPts = this.state.displayMissionPts ? this.MissionPointsMarkers : null;
+		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? this.state.MissionPointsMarkers : null;
 
-		const missionPath = this.state.displayMissionPts ? <Polyline id="missionPath" positions={this.missionPointsArray} color="green"></Polyline> : null;
+		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={this.missionPointsArray} color="green"></Polyline> : null;
 
-		const vehiclePath = this.state.displayVehiclePath ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
+		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
+
+		const drawGeoFenceOptions = (this.state.drawingGeoFence) ? <div className="drawGeoFence_content">
+			<Button type="submit" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
+			<Button type="submit" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
+			<Button type="submit" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+		</div> : null;
+
+		const vehicle = this.state.displayVehicle ?
+		[<Marker icon={this.vehicleMarker} position={position}>
+			<Popup>
+				Lat: {this.state.vehiclePosition.latitude.toFixed(4)}, Long: {this.state.vehiclePosition.longitude.toFixed(4)} <br/>
+				x: {this.state.vehiclePosition.x.toFixed(4)}, y: {this.state.vehiclePosition.y.toFixed(4)}
+			</Popup>
+		</Marker>,
+		<Circle center={position} radius={this.state.positionError}></Circle>] : null;
 
 		return (
 			<div>
@@ -377,22 +444,18 @@ class MapComponent extends React.Component {
 						minZoom={1}
 						maxZoom={17}
 					/>
-					<Marker icon={this.vehicleMarker} position={position}>
-						<Popup>
-							Lat: {this.state.vehiclePosition.latitude.toFixed(4)}, Long: {this.state.vehiclePosition.longitude.toFixed(4)} <br/>
-							x: {this.state.vehiclePosition.x.toFixed(4)}, y: {this.state.vehiclePosition.y.toFixed(4)}
-						</Popup>
-					</Marker>
-					<Circle center={position} radius={this.state.positionError}></Circle>
 
+					{vehicle}
 					{geoFence}
 					{missionPts}
 					{missionPath}
 					{vehiclePath}
 
+					<Polygon id="drawGeoFence" positions={this.state.drawGeoFence} color="blue"></Polygon>
+
 				</LeafletMap>
 				<div className={css(styles.map_options_styles)}>
-				<ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(clickedItem)}}/>
+					<ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(clickedItem)}}/>
 					<div className="dropdown_styles">
 						<Button>Missions</Button>
 						<div className="dropdown_content">
@@ -403,6 +466,11 @@ class MapComponent extends React.Component {
 					<Button type="submit" onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
 					<Button type="submit" onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
 					<Button type="submit" onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
+
+					<div className="drawGeoFence_styles">
+						<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
+						{drawGeoFenceOptions}
+					</div>
 				</div>
 			</div>
 		);
