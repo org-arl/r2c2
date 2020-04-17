@@ -150,6 +150,25 @@
 
 .dropdown_styles:hover .dropdown_content {display: block;}
 
+/******* DrawGeoFence styles *******/
+.drawGeoFence_styles{
+	position: relative;
+	display: inline-block;
+	margin-left: 15px;
+}
+
+.drawGeoFence_content{
+	position: absolute;
+	background-color: #f1f1f1;
+	/* min-width: 160px; */
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	z-index: 1001;
+}
+
+.drawGeoFence_content Button {
+	margin: 3px;
+}
+
 /*******  Script Control  ********/
 .subroutine_select_styles{
 	width: 150px;
