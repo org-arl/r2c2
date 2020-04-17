@@ -23,11 +23,13 @@
     "react-toastify": "^5.5.0"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "redux": "^4.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "buildsim": "env-cmd -f .env.sim react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

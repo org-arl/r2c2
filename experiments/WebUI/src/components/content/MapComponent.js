@@ -24,12 +24,12 @@ import fenceIcon from '../../assets/img/fence.svg';
 import missionPtsIcon from '../../assets/img/missionPtsIcon.svg';
 import pathIcon from '../../assets/img/path.svg';
 
-const development = (process.env.NODE_ENV === 'development');
+console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
 
 toast.configure();
 
-const tileUrl = development
-	? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+const tileUrl = process.env.REACT_APP_MAP_TILE_URL
+	? process.env.REACT_APP_MAP_TILE_URL
 	: process.env.PUBLIC_URL + '/osm/tiles/{z}/{x}/{y}.png';
 
 const styles = StyleSheet.create({
