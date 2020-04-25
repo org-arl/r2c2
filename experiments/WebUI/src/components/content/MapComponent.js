@@ -72,7 +72,6 @@ class MapComponent extends React.Component {
 			polylineArray: [],
 			pathLimit: 1000,
 			missionPoints: [],
-			MissionPointsMarkers: [],
 			displayGeoFence: true,
 			displayMissionPts: true,
 			displayVehiclePath: true,
@@ -105,7 +104,6 @@ class MapComponent extends React.Component {
 
 		this.vehicleId = null;
 		this.missions = null;
-		this.missionPointsArray = [];
 	}
 
 	componentDidMount() {
@@ -303,27 +301,16 @@ class MapComponent extends React.Component {
 			return;
 		}
 
-		this.setState({
-			missionPoints: this.missions[this.missionNumber]
-		});
-		var MissionPointsMarkers = [];
-		this.missionPointsArray = [];
-		for (var i=0; i < this.state.missionPoints.length; i++){
+		var missionPoints = [];
+		var missionPointsArray = this.missions[this.missionNumber];
 
-			var lat = this.coordSys.locy2lat(this.state.missionPoints[i].mp.y);
-			var long = this.coordSys.locx2long(this.state.missionPoints[i].mp.x);
-			this.missionPointsArray.push([lat, long]);
-			MissionPointsMarkers.push(
-				<Marker icon={mapPin} key={i} position={[lat, long]}>
-					<Popup>
-						Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)} <br/>
-						x: {this.state.missionPoints[i].mp.x.toFixed(4)}, y: {this.state.missionPoints[i].mp.y.toFixed(4)}
-					</Popup>
-				</Marker>
-			);
+		for (var i=0; i < missionPointsArray.length; i++){
+			var lat = this.coordSys.locy2lat(missionPointsArray[i].mp.y);
+			var long = this.coordSys.locx2long(missionPointsArray[i].mp.x);
+			missionPoints.push([missionPointsArray[i].mp.x.toFixed(4), missionPointsArray[i].mp.y.toFixed(4), lat.toFixed(4), long.toFixed(4)]);
 		}
 		this.setState({
-			MissionPointsMarkers: MissionPointsMarkers
+			missionPoints: missionPoints
 		});
 	}
 
@@ -412,11 +399,26 @@ class MapComponent extends React.Component {
 			<div key={index}> {index+1} <Button onClick={() => this.viewMission(index)}>View</Button> <Button onClick={() => this.runMission(index)}>Run</Button></div>
 		);
 
+		var MissionPointsMarkers = [];
+		var missionPtLatLngs = [];
+		this.state.missionPoints.forEach((missionPoint, i) => {
+			var x = missionPoint[0], y = missionPoint[1], lat = missionPoint[2], long = missionPoint[3];
+			MissionPointsMarkers.push(
+				<Marker icon={mapPin} key={i} position={[lat, long]}>
+					<Popup>
+						Lat: {lat}, Long: {long} <br/>
+						x: {x}, y: {y}
+					</Popup>
+				</Marker>
+			);
+			missionPtLatLngs.push([lat, long]);
+		});
+
 		const geoFence = (this.state.displayGeoFence && !this.state.drawingGeoFence) ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
 
-		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? this.state.MissionPointsMarkers : null;
+		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? MissionPointsMarkers : null;
 
-		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={this.missionPointsArray} color="green"></Polyline> : null;
+		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={missionPtLatLngs} color="green"></Polyline> : null;
 
 		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
 
@@ -434,6 +436,8 @@ class MapComponent extends React.Component {
 			</Popup>
 		</Marker>,
 		<Circle center={position} radius={this.state.positionError}></Circle>] : null;
+
+
 
 		return (
 			<div>
