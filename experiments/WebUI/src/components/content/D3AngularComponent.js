@@ -46,6 +46,7 @@ class D3AngularComponent extends React.Component{
 		this.renderD3Gauge = this.renderD3Gauge.bind(this);
 		this.deg2rad = this.deg2rad.bind(this);
 		this.update = this.update.bind(this);
+		this.setTarget = this.setTarget.bind(this);
 	}
 
 	componentDidMount() {
@@ -155,7 +156,6 @@ class D3AngularComponent extends React.Component{
 			.attr('transform', 'rotate(' + this.props.minAngle +')');
 
 
-// ************2nd pointer********
         const lineData2 = [ [this.props.pointerWidth / 2, 0],
 						[0, -pointerHeadLength],
 						[-(this.props.pointerWidth / 2), 0],
@@ -163,16 +163,46 @@ class D3AngularComponent extends React.Component{
 						[this.props.pointerWidth / 2, 0] ];
 		const pointerLine2 = d3.line().curve(d3.curveMonotoneX);
 		const pg2 = svg.append('g').data([lineData2])
-				.attr('class', 'pointer2')
+				.attr('class', 'pointer')
 				.attr('transform', centerTx);
 
 		this.pointer2 = pg2.append('path')
 			.attr('d', pointerLine2/*function(d) { return pointerLine(d) +'Z';}*/ )
 			.attr('transform', 'rotate(' + this.props.minAngle +')');
-// *************
 
-		// update((newValue === undefined) ? 0 : newValue);
-		// this.update(Math.random() * 10);
+
+
+		// **************** Target Pointers ************ //
+		const lineData3 = [ [this.props.pointerWidth / 2, 0],
+						[0, -pointerHeadLength],
+						[-(this.props.pointerWidth / 2), 0],
+						[0, this.props.pointerTailLength],
+						[this.props.pointerWidth / 2, 0] ];
+		const pointerLine3 = d3.line().curve(d3.curveMonotoneX);
+		const pg3 = svg.append('g').data([lineData3])
+				.attr('class', 'pointer2')
+				.attr('transform', centerTx);
+
+		this.pointer3 = pg3.append('path')
+			.attr('d', pointerLine3 )
+			.attr('transform', 'rotate(' + this.props.minAngle +')');
+
+
+		const lineData4 = [ [this.props.pointerWidth / 2, 0],
+						[0, -pointerHeadLength],
+						[-(this.props.pointerWidth / 2), 0],
+						[0, this.props.pointerTailLength],
+						[this.props.pointerWidth / 2, 0] ];
+		const pointerLine4 = d3.line().curve(d3.curveMonotoneX);
+		const pg4 = svg.append('g').data([lineData4])
+				.attr('class', 'pointer2')
+				.attr('transform', centerTx);
+
+		this.pointer4 = pg4.append('path')
+			.attr('d', pointerLine4/*function(d) { return pointerLine(d) +'Z';}*/ )
+			.attr('transform', 'rotate(' + this.props.minAngle +')');
+
+		// ****** submarine Icon ********//
 
 		d3.xml(this.props.centralIcon)
 		.then(data => {
@@ -183,9 +213,11 @@ class D3AngularComponent extends React.Component{
 					.attr('transform', 'translate(' + r + ', ' + r + ') rotate(0) translate(-' + r + ', -' + this.props.iconHeight / 2 + ')');
 
 			this.update(30);
+			this.setTarget(0);
 		})
 
 		this.update(0);
+		this.setTarget(0);
 	}
 
 	update(newValue) {
@@ -215,6 +247,24 @@ class D3AngularComponent extends React.Component{
 		}
 
 		this.gaugeVal.select('text').text(newValue.toFixed(2));
+	}
+
+	setTarget(newValue) {
+		const r = this.props.size / 2;
+
+		const ratio1 = this.scale(newValue);
+		const newAngle1 = this.props.minAngle + (ratio1 * this.range);
+		const ratio2 = this.scale(newValue + 180);
+		const newAngle2 = this.props.minAngle + (ratio2 * this.range);
+		this.pointer3.transition()
+			.duration(0)
+			.ease(d3.easeElastic)
+			.attr('transform', 'rotate(' + newAngle1 +')');
+
+		this.pointer4.transition()
+				.duration(0)
+				.attr('transform', 'rotate(' + newAngle2 +')');
+
 	}
 
 
