@@ -1,6 +1,7 @@
 import React from 'react'
 import { Map as LeafletMap, Marker, Popup, TileLayer, Circle, Polygon, Polyline } from 'react-leaflet';
 
+import CursorPositionComponent from './CursorPositionComponent';
 
 import CoordSys from '../../assets/CoordSys.js';
 
@@ -78,7 +79,13 @@ class MapComponent extends React.Component {
 			displayVehicle: true,
 
 			drawingGeoFence: false,
-			drawGeoFence: []
+			drawGeoFence: [],
+			cursorPosition: {
+				latitude: 1.303457,
+				longitude: 103.736088,
+				x: 0.0,
+				y: 0.0
+			}
 
 		};
 
@@ -99,6 +106,7 @@ class MapComponent extends React.Component {
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
 		this.mapOnClick = this.mapOnClick.bind(this);
+		this.onMouseMove = this.onMouseMove.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
@@ -391,6 +399,18 @@ class MapComponent extends React.Component {
 		}
 	}
 
+	onMouseMove(e) {
+		// console.log(e.latlng);
+		this.setState({
+			cursorPosition: {
+				latitude: e.latlng.lat.toFixed(6),
+				longitude: e.latlng.lng.toFixed(6),
+				x: this.coordSys.long2locx(e.latlng.lng).toFixed(6),
+				y: this.coordSys.lat2locy(e.latlng.lat).toFixed(6)
+			}
+		});
+	}
+
 	render() {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
 		const mapCenter = [this.state.mapCenter.latitude, this.state.mapCenter.longitude];
@@ -441,7 +461,7 @@ class MapComponent extends React.Component {
 
 		return (
 			<div>
-				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onClick={this.mapOnClick}>
+				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onClick={this.mapOnClick} onMouseMove={this.onMouseMove}>
 					<TileLayer
 						attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 						url={tileUrl}
@@ -475,6 +495,8 @@ class MapComponent extends React.Component {
 						<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
 						{drawGeoFenceOptions}
 					</div>
+
+					<CursorPositionComponent position={this.state.cursorPosition}/>
 				</div>
 			</div>
 		);
