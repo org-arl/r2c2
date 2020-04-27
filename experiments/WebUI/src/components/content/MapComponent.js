@@ -1,6 +1,7 @@
 import React from 'react'
 import { Map as LeafletMap, Marker, Popup, TileLayer, Circle, Polygon, Polyline } from 'react-leaflet';
 
+import CursorPositionComponent from './CursorPositionComponent';
 
 import CoordSys from '../../assets/CoordSys.js';
 
@@ -72,14 +73,19 @@ class MapComponent extends React.Component {
 			polylineArray: [],
 			pathLimit: 1000,
 			missionPoints: [],
-			MissionPointsMarkers: [],
 			displayGeoFence: true,
 			displayMissionPts: true,
 			displayVehiclePath: true,
 			displayVehicle: true,
 
 			drawingGeoFence: false,
-			drawGeoFence: []
+			drawGeoFence: [],
+			cursorPosition: {
+				latitude: 1.303457,
+				longitude: 103.736088,
+				x: 0.0,
+				y: 0.0
+			}
 
 		};
 
@@ -100,12 +106,12 @@ class MapComponent extends React.Component {
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
 		this.mapOnClick = this.mapOnClick.bind(this);
+		this.onMouseMove = this.onMouseMove.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
 		this.vehicleId = null;
 		this.missions = null;
-		this.missionPointsArray = [];
 	}
 
 	componentDidMount() {
@@ -303,27 +309,16 @@ class MapComponent extends React.Component {
 			return;
 		}
 
-		this.setState({
-			missionPoints: this.missions[this.missionNumber]
-		});
-		var MissionPointsMarkers = [];
-		this.missionPointsArray = [];
-		for (var i=0; i < this.state.missionPoints.length; i++){
+		var missionPoints = [];
+		var missionPointsArray = this.missions[this.missionNumber];
 
-			var lat = this.coordSys.locy2lat(this.state.missionPoints[i].mp.y);
-			var long = this.coordSys.locx2long(this.state.missionPoints[i].mp.x);
-			this.missionPointsArray.push([lat, long]);
-			MissionPointsMarkers.push(
-				<Marker icon={mapPin} key={i} position={[lat, long]}>
-					<Popup>
-						Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)} <br/>
-						x: {this.state.missionPoints[i].mp.x.toFixed(4)}, y: {this.state.missionPoints[i].mp.y.toFixed(4)}
-					</Popup>
-				</Marker>
-			);
+		for (var i=0; i < missionPointsArray.length; i++){
+			var lat = this.coordSys.locy2lat(missionPointsArray[i].mp.y);
+			var long = this.coordSys.locx2long(missionPointsArray[i].mp.x);
+			missionPoints.push([missionPointsArray[i].mp.x.toFixed(4), missionPointsArray[i].mp.y.toFixed(4), lat.toFixed(4), long.toFixed(4)]);
 		}
 		this.setState({
-			MissionPointsMarkers: MissionPointsMarkers
+			missionPoints: missionPoints
 		});
 	}
 
@@ -404,6 +399,18 @@ class MapComponent extends React.Component {
 		}
 	}
 
+	onMouseMove(e) {
+		// console.log(e.latlng);
+		this.setState({
+			cursorPosition: {
+				latitude: e.latlng.lat.toFixed(6),
+				longitude: e.latlng.lng.toFixed(6),
+				x: this.coordSys.long2locx(e.latlng.lng).toFixed(6),
+				y: this.coordSys.lat2locy(e.latlng.lat).toFixed(6)
+			}
+		});
+	}
+
 	render() {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
 		const mapCenter = [this.state.mapCenter.latitude, this.state.mapCenter.longitude];
@@ -412,11 +419,26 @@ class MapComponent extends React.Component {
 			<div key={index}> {index+1} <Button onClick={() => this.viewMission(index)}>View</Button> <Button onClick={() => this.runMission(index)}>Run</Button></div>
 		);
 
+		var MissionPointsMarkers = [];
+		var missionPtLatLngs = [];
+		this.state.missionPoints.forEach((missionPoint, i) => {
+			var x = missionPoint[0], y = missionPoint[1], lat = missionPoint[2], long = missionPoint[3];
+			MissionPointsMarkers.push(
+				<Marker icon={mapPin} key={i} position={[lat, long]}>
+					<Popup>
+						Lat: {lat}, Long: {long} <br/>
+						x: {x}, y: {y}
+					</Popup>
+				</Marker>
+			);
+			missionPtLatLngs.push([lat, long]);
+		});
+
 		const geoFence = (this.state.displayGeoFence && !this.state.drawingGeoFence) ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
 
-		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? this.state.MissionPointsMarkers : null;
+		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? MissionPointsMarkers : null;
 
-		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={this.missionPointsArray} color="green"></Polyline> : null;
+		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={missionPtLatLngs} color="green"></Polyline> : null;
 
 		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
 
@@ -435,9 +457,11 @@ class MapComponent extends React.Component {
 		</Marker>,
 		<Circle center={position} radius={this.state.positionError}></Circle>] : null;
 
+
+
 		return (
 			<div>
-				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onClick={this.mapOnClick}>
+				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onClick={this.mapOnClick} onMouseMove={this.onMouseMove}>
 					<TileLayer
 						attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 						url={tileUrl}
@@ -471,6 +495,8 @@ class MapComponent extends React.Component {
 						<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
 						{drawGeoFenceOptions}
 					</div>
+
+					<CursorPositionComponent position={this.state.cursorPosition}/>
 				</div>
 			</div>
 		);
