@@ -1,8 +1,0 @@
-# dependencies
-
-/node_modules
-
-# Gradle
-
-build/
-.gradle/
