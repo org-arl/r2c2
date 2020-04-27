@@ -2,12 +2,12 @@
     fill: steelblue;
 }
 
-.gauge g.pointer {
+.gauge g.pointer2 {
     fill: #e85116;
     stroke: #b64011;
 }
 
-.gauge g.pointer2 {
+.gauge g.pointer {
     fill: #000000;
     stroke: #000000;
 }
