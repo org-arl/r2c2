@@ -3,6 +3,8 @@ import { Map as LeafletMap, Marker, Popup, TileLayer, Circle, Polygon, Polyline 
 
 import CursorPositionComponent from './CursorPositionComponent';
 
+import MissionPlanner from './MissionPlanner';
+
 import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
@@ -11,7 +13,7 @@ import { mapPin, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
 // import ManualCommands from '../../assets/ManualCommands.js';
 import ToolbarComponent from '../ToolbarComponent';
 
-import { Row, Container, Dropdown, Button } from 'react-bootstrap';
+import { Row, Container, Dropdown, Button, DropdownButton } from 'react-bootstrap';
 
 import { StyleSheet, css } from 'aphrodite';
 
@@ -85,7 +87,10 @@ class MapComponent extends React.Component {
 				longitude: 103.736088,
 				x: 0.0,
 				y: 0.0
-			}
+			},
+
+			drawingMission: false,
+			newMission: []
 
 		};
 
@@ -105,8 +110,11 @@ class MapComponent extends React.Component {
 		this.saveNewGeoFence = this.saveNewGeoFence.bind(this);
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
+		this.drawNewMission = this.drawNewMission.bind(this);
+
 		this.mapOnClick = this.mapOnClick.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
+		this.moveGeoFenceMarker = this.moveGeoFenceMarker.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
@@ -292,7 +300,6 @@ class MapComponent extends React.Component {
 		this.viewMission(num);
 		//todo: should there be some response to check if mission has been run?
 		this.management.runMission(parseInt(num) + 1);
-
 	}
 
 	viewMission(num){
@@ -354,9 +361,11 @@ class MapComponent extends React.Component {
 	}
 
 	enableDrawGeofence(e){
-		this.setState({
-			drawingGeoFence: true
-		})
+		if (!this.state.drawingMission) {
+			this.setState({
+				drawingGeoFence: true
+			})
+		}
 	}
 
 	undoGeoFencePoint() {
@@ -384,6 +393,25 @@ class MapComponent extends React.Component {
 		});
 	}
 
+	drawNewMission(e){
+		if (!this.state.drawingGeoFence) {
+			this.setState({
+				drawingMission: true
+			});
+			this.missions.push([]);
+		}
+	}
+
+	cancelNewMission(e){
+		this.setState({
+			drawingMission: false,
+			newMission: []
+		});
+		if (this.missions.length > 0) {
+			this.missions.splice(-1, 1);
+		}
+	}
+
 	openNewWindow(tab) {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
@@ -395,6 +423,10 @@ class MapComponent extends React.Component {
 		if (this.state.drawingGeoFence) {
 			this.setState({
 				drawGeoFence: [...this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]]
+			});
+		} else if (this.state.drawingMission) {
+			this.setState({
+				newMission: [...this.state.newMission, [e.latlng.lat, e.latlng.lng]]
 			});
 		}
 	}
@@ -409,6 +441,22 @@ class MapComponent extends React.Component {
 				y: this.coordSys.lat2locy(e.latlng.lat).toFixed(6)
 			}
 		});
+	}
+
+	moveGeoFenceMarker(e) {
+		// var newlat = e.latlng.lat;
+		// var newlng = e.latlng.lng;
+		// var drawGeoFenceArr = this.state.drawGeoFence;
+		// for (var i = 0; i < drawGeoFenceArr.length; i++) {
+		// 	if ( drawGeoFenceArr[i][0] === e.oldLatLng.lat && drawGeoFenceArr[i][1] === e.oldLatLng.lng ){
+		// 		drawGeoFenceArr[i] = [newlat, newlng];
+		// 		console.log("hello");
+		// 	}
+		// }
+		// this.setState({
+		// 	drawGeoFence: drawGeoFenceArr
+		// });
+		// console.log(this.state.drawGeoFence);
 	}
 
 	render() {
@@ -434,19 +482,43 @@ class MapComponent extends React.Component {
 			missionPtLatLngs.push([lat, long]);
 		});
 
-		const geoFence = (this.state.displayGeoFence && !this.state.drawingGeoFence) ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
+		const geoFence = (this.state.displayGeoFence && !this.state.drawingGeoFence && !this.state.drawingMission) ? <Polygon id="geoFence" positions={this.state.geoFenceCoordinates} color="red"></Polygon> : null;
 
-		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? MissionPointsMarkers : null;
+		const missionPts = (this.state.displayMissionPts && !this.state.drawingGeoFence && !this.state.drawingMission) ? MissionPointsMarkers : null;
 
-		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence) ? <Polyline id="missionPath" positions={missionPtLatLngs} color="green"></Polyline> : null;
+		const missionPath = (this.state.displayMissionPts && !this.state.drawingGeoFence && !this.state.drawingMission) ? <Polyline id="missionPath" positions={missionPtLatLngs} color="green"></Polyline> : null;
 
-		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
+		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence && !this.state.drawingMission) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
 
 		const drawGeoFenceOptions = (this.state.drawingGeoFence) ? <div className="drawGeoFence_content">
 			<Button type="submit" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
 			<Button type="submit" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
 			<Button type="submit" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
 		</div> : null;
+
+		const drawGeoFenceMarkers = [];
+		if (this.state.drawingGeoFence) {
+			for (var i = 0; i < this.state.drawGeoFence.length; i++) {
+				// drawGeoFenceMarkers.push(<Marker onMove={this.moveGeoFenceMarker} icon={mapPin} key={i} draggable={true} position={this.state.drawGeoFence[i]}></Marker>);
+				drawGeoFenceMarkers.push(<Marker onMove={this.moveGeoFenceMarker} icon={mapPin} key={i} position={this.state.drawGeoFence[i]}></Marker>);
+			}
+		}
+
+		const drawNewMissionMarkers = [];
+		if (this.state.drawingMission) {
+			for (var i = 0; i < this.state.newMission.length; i++) {
+				drawNewMissionMarkers.push(
+					<Marker icon={mapPin} key={i} position={this.state.newMission[i]}>
+						<Popup>
+							<DropdownButton id="dropdown-basic-button" title="MissionTask Type">
+								<Dropdown.Item href="#/action-1">SimpleMT</Dropdown.Item>
+								<Dropdown.Item href="#/action-2">LawnMoverMT</Dropdown.Item>
+							</DropdownButton>
+						</Popup>
+					</Marker>
+				);
+			}
+		}
 
 		const vehicle = this.state.displayVehicle ?
 		[<Marker icon={this.vehicleMarker} position={position}>
@@ -476,28 +548,36 @@ class MapComponent extends React.Component {
 					{vehiclePath}
 
 					<Polygon id="drawGeoFence" positions={this.state.drawGeoFence} color="blue"></Polygon>
+					{drawGeoFenceMarkers}
+
+					<Polyline id="newMission" positions={this.state.newMission} color="red"></Polyline>
+					{drawNewMissionMarkers}
 
 				</LeafletMap>
-				<div className={css(styles.map_options_styles)}>
-					<ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(clickedItem)}}/>
-					<div className="dropdown_styles">
-						<Button>Missions</Button>
-						<div className="dropdown_content">
-							{missionList}
+				<Container className={css(styles.map_options_styles)}>
+					<Row>
+						<ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(clickedItem)}}/>
+						<div className="dropdown_styles">
+							<Button>Missions</Button>
+							<div className="dropdown_content">
+								{missionList}
+							</div>
 						</div>
-					</div>
-					<Button type="submit" onClick={this.recentreMap}><FontAwesomeIcon icon={faCrosshairs}  title="Re-center Map"/></Button>
-					<Button type="submit" onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
-					<Button type="submit" onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
-					<Button type="submit" onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
+						<Button type="submit" onClick={this.recentreMap}><FontAwesomeIcon icon={faCrosshairs}  title="Re-center Map"/></Button>
+						<Button type="submit" onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
+						<Button type="submit" onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
+						<Button type="submit" onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
 
-					<div className="drawGeoFence_styles">
-						<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
-						{drawGeoFenceOptions}
-					</div>
-
-					<CursorPositionComponent position={this.state.cursorPosition}/>
-				</div>
+						<div className="drawGeoFence_styles">
+							<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
+							{drawGeoFenceOptions}
+						</div>
+					</Row>
+					<Row>
+						<MissionPlanner drawNewMissionFunc={this.drawNewMission} viewMissionFunc={this.viewMission} missions={this.missions} management={this.management}/>
+					</Row>
+					<CursorPositionComponent position={this.state.cursorPosition} />
+				</Container>
 			</div>
 		);
 	}
