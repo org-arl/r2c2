@@ -81,12 +81,12 @@ class CursorPositionComponent extends React.Component {
 					var activeMleg = (this.state.selectedMLeg == j+1) ? "active" : "" ;
 					missionLegList.push(<ListGroup.Item action className={activeMleg} onClick={() => this.selectMleg(j+1)}>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x}, {missionLeg.mp.y}, {missionLeg.mp.z}</ListGroup.Item>);
 				});
-				// missionLegList.push(<ListGroup.Item action > + </ListGroup.Item>);
+				missionLegList.push(<ListGroup.Item action > + </ListGroup.Item>);
 
 				var nestedClass = (this.state.selectedMission === (i+1)) ? "show-nested" : "hide-nested";
 				var caretDown = (this.state.selectedMission === (i+1)) ? "caret caret-down" : "caret";
 				missionList.push(
-					<ListGroup.Item><span onClick={() => this.selectMission(i+1)} className={caretDown}>Mission No. {i+1}</span>
+					<ListGroup.Item><span onClick={() => this.selectMission(i+1)} className={caretDown}>Mission No. {i+1}</span> <FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
 						<ListGroup className={nestedClass}>
 							{missionLegList}
 						</ListGroup>
@@ -98,9 +98,9 @@ class CursorPositionComponent extends React.Component {
 			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.props.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
 			console.log(missionLeg);
 		}
-		// missionList.push(
-		// 	<ListGroup.Item onClick={() => this.addNewMission()} className="addMissionBtn"> + </ListGroup.Item>
-		// );
+		missionList.push(
+			<ListGroup.Item onClick={() => this.addNewMission()} className="addMissionBtn"> + </ListGroup.Item>
+		);
 
 		return (
 			<div>
