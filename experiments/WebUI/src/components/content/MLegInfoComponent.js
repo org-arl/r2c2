@@ -18,10 +18,10 @@ const styles = StyleSheet.create({
 class MLegInfoComponent extends React.Component {
 	constructor(props, context) {
 		super(props, context);
-		// Make deep copy of missionLeg object so that changes dont get saved instantly.
-		var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
+		// // Make deep copy of missionLeg object so that changes dont get saved instantly.
+		// var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
 		this.state = {
-			missionLeg: missionLeg,
+			missionLeg: this.props.missionLeg,
 			editMode: this.props.editMode
 		}
 	}
@@ -30,10 +30,10 @@ class MLegInfoComponent extends React.Component {
 		if (prevProps.missionLeg !== this.props.missionLeg) {
 			// console.log(this.state.missionLeg);
 
-			// Make deep copy of missionLeg object so that changes dont get saved instantly.
-			var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
+			// // Make deep copy of missionLeg object so that changes dont get saved instantly.
+			// var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
 			this.setState({
-				missionLeg: missionLeg,
+				missionLeg: this.props.missionLeg,
 				editMode: this.props.editMode
 			});
 		}
@@ -42,10 +42,16 @@ class MLegInfoComponent extends React.Component {
 	onPropertyChange(e) {
 		var missionLeg = this.state.missionLeg;
 		// console.log(e.target.value);
-		missionLeg.mp[e.target.name] = parseFloat(e.target.value);
+		var value = e.target.value;
+		if (value === "") {
+			value = 0;
+		}
+		missionLeg.mp[e.target.name] = parseFloat(value);
 		this.setState({
 			missionLeg: missionLeg
 		});
+
+		this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
 	}
 
 	onParamChange(e) {
@@ -64,26 +70,26 @@ class MLegInfoComponent extends React.Component {
 		});
 	}
 
-	saveChanges() {
-		// creating a copy of the state.missionLeg and then assigning it to props.missionLeg to prevent further direct modification to props.missionLeg which would have pointed to state.missionLeg due to assign.
-		Object.assign(this.props.missionLeg, JSON.parse(JSON.stringify(this.state.missionLeg)));
-		// console.log(this.props.missionIndex);
-		this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
-	}
-
-	discardChanges() {
-		var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
-		this.setState({
-			missionLeg: missionLeg,
-			editMode: this.props.editMode
-		});
-	}
+	// saveChanges() {
+	// 	// creating a copy of the state.missionLeg and then assigning it to props.missionLeg to prevent further direct modification to props.missionLeg which would have pointed to state.missionLeg due to assign.
+	// 	Object.assign(this.props.missionLeg, JSON.parse(JSON.stringify(this.state.missionLeg)));
+	// 	// console.log(this.props.missionIndex);
+	// 	this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
+	// }
+	//
+	// discardChanges() {
+	// 	var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
+	// 	this.setState({
+	// 		missionLeg: missionLeg,
+	// 		editMode: this.props.editMode
+	// 	});
+	// }
 
 	render() {
 		var propertyTableRows = [];
 		var paramTableRows = [];
 		var payloadObject = {};
-		var actionButtons = null;
+		// var actionButtons = null;
 		if (this.state.missionLeg !== null) {
 
 			//Property table - TODO currently hard coded, find better way to do this.
@@ -123,10 +129,10 @@ class MLegInfoComponent extends React.Component {
 
 			payloadObject = this.state.missionLeg.payload;
 
-			actionButtons = <div>
-				<Button variant="success" onClick={() => this.saveChanges()}>Save Changes</Button>
-				<Button variant="danger" onClick={() => this.discardChanges()}>Discard Changes</Button>
-			</div>;
+			// actionButtons = <div>
+			// 	<Button variant="success" onClick={() => this.saveChanges()}>Save Changes</Button>
+			// 	<Button variant="danger" onClick={() => this.discardChanges()}>Discard Changes</Button>
+			// </div>;
 		}
 
 		const Properties =
@@ -180,7 +186,7 @@ class MLegInfoComponent extends React.Component {
 						</Tab.Pane>
 					</Tab.Content>
 				</Tab.Container>
-				{actionButtons}
+				{/* {actionButtons} */}
 			</div>
 		);
 	}
