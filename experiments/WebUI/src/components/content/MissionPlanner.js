@@ -17,7 +17,7 @@ class MissionPlanner extends React.Component {
 
 		return (
 			<div className="MissionPlannerContainer">
-				<MissionTreeViewComponent management={this.props.management} drawNewMissionFunc={this.props.drawNewMissionFunc} viewMissionFunc={this.props.viewMissionFunc} missions={this.props.missions}/>
+				<MissionTreeViewComponent management={this.props.management} addNewMissionFunc={this.props.addNewMissionFunc} cancelNewMissionFunc={this.props.cancelNewMissionFunc} viewMissionFunc={this.props.viewMissionFunc} missions={this.props.missions}/>
 			</div>
 		);
 	}
