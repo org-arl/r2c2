@@ -132,7 +132,8 @@ class MapComponent extends React.Component {
 
 			missions: null, //all missions
 			newMission: [],
-			selectedMissionPoint: 0
+			selectedMissionPoint: 0,
+			displayMissionPlanner: false
 
 		};
 
@@ -165,6 +166,8 @@ class MapComponent extends React.Component {
 		// this.missions = null;
 
 		this.selectMissionPoint = this.selectMissionPoint.bind(this);
+
+		this.toggleMissionPlanner = this.toggleMissionPlanner.bind(this);
 	}
 
 	componentDidMount() {
@@ -351,7 +354,6 @@ class MapComponent extends React.Component {
 	}
 
 	viewMission(num){
-		// TODO: mission not being shown in first function call. Displays only on second call.
 
 		this.missionNumber = num;
 
@@ -536,6 +538,20 @@ class MapComponent extends React.Component {
 		// console.log(this.state.drawGeoFence);
 	}
 
+	toggleMissionPlanner(e) {
+		if (this.state.displayMissionPlanner) {
+			this.setState({
+				displayMissionPlanner: false
+			});
+			this.selectMissionPoint(0);
+		} else {
+			this.setState({
+				displayMissionPlanner: true
+			});
+		}
+
+	}
+
 	render() {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
 		const mapCenter = [this.state.mapCenter.latitude, this.state.mapCenter.longitude];
@@ -618,6 +634,11 @@ class MapComponent extends React.Component {
 		</Marker>,
 		<Circle center={position} radius={this.state.positionError}></Circle>] : null;
 
+		const MissionPlannerPanels = (this.state.displayMissionPlanner) ?
+		<Row>
+			<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} addNewMissionFunc={this.addNewMission} cancelNewMissionFunc={this.cancelNewMission} viewMissionFunc={this.viewMission} missions={this.state.missions} management={this.management}/>
+		</Row> :
+		null;
 
 
 		return (
@@ -661,10 +682,13 @@ class MapComponent extends React.Component {
 							<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
 							{drawGeoFenceOptions}
 						</div>
+						<div>
+							<Button type="submit" onClick={this.toggleMissionPlanner}>MissionPlanner</Button>
+						</div>
 					</Row>
-					<Row>
-						<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} addNewMissionFunc={this.addNewMission} cancelNewMissionFunc={this.cancelNewMission} viewMissionFunc={this.viewMission} missions={this.state.missions} management={this.management}/>
-					</Row>
+
+					{MissionPlannerPanels}
+
 					<CursorPositionComponent position={this.state.cursorPosition} />
 				</Container>
 			</div>
