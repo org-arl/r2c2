@@ -9,7 +9,7 @@ import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
 import { Management } from "../../assets/jc2.js";
-import { mapPin, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
+import { mapPin, mapPinSelected, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
 // import ManualCommands from '../../assets/ManualCommands.js';
 import ToolbarComponent from '../ToolbarComponent';
 
@@ -131,7 +131,8 @@ class MapComponent extends React.Component {
 			MissionDesignMode: false,
 
 			missions: null, //all missions
-			newMission: []
+			newMission: [],
+			selectedMissionPoint: 0
 
 		};
 
@@ -162,6 +163,8 @@ class MapComponent extends React.Component {
 
 		this.vehicleId = null;
 		// this.missions = null;
+
+		this.selectMissionPoint = this.selectMissionPoint.bind(this);
 	}
 
 	componentDidMount() {
@@ -465,6 +468,12 @@ class MapComponent extends React.Component {
 		}
 	}
 
+	selectMissionPoint(index) {
+		this.setState({
+			selectedMissionPoint: index
+		});
+	}
+
 	openNewWindow(tab) {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
@@ -539,14 +548,26 @@ class MapComponent extends React.Component {
 		var missionPtLatLngs = [];
 		this.state.missionPoints.forEach((missionPoint, i) => {
 			var x = missionPoint[0], y = missionPoint[1], lat = missionPoint[2], long = missionPoint[3];
-			MissionPointsMarkers.push(
-				<Marker icon={mapPin} key={i} position={[lat, long]}>
-					<Popup>
-						Lat: {lat}, Long: {long} <br/>
-						x: {x}, y: {y}
-					</Popup>
-				</Marker>
-			);
+			if (this.state.selectedMissionPoint == i+1) {
+				MissionPointsMarkers.push(
+					<Marker icon={mapPinSelected} key={i} position={[lat, long]}>
+						<Popup>
+							Lat: {lat}, Long: {long} <br/>
+							x: {x}, y: {y}
+						</Popup>
+					</Marker>
+				);
+			} else {
+				MissionPointsMarkers.push(
+					<Marker icon={mapPin} key={i} position={[lat, long]}>
+						<Popup>
+							Lat: {lat}, Long: {long} <br/>
+							x: {x}, y: {y}
+						</Popup>
+					</Marker>
+				);
+			}
+
 			missionPtLatLngs.push([lat, long]);
 		});
 
@@ -642,7 +663,7 @@ class MapComponent extends React.Component {
 						</div>
 					</Row>
 					<Row>
-						<MissionPlanner addNewMissionFunc={this.addNewMission} cancelNewMissionFunc={this.cancelNewMission} viewMissionFunc={this.viewMission} missions={this.state.missions} management={this.management}/>
+						<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} addNewMissionFunc={this.addNewMission} cancelNewMissionFunc={this.cancelNewMission} viewMissionFunc={this.viewMission} missions={this.state.missions} management={this.management}/>
 					</Row>
 					<CursorPositionComponent position={this.state.cursorPosition} />
 				</Container>

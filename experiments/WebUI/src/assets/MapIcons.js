@@ -5,6 +5,11 @@ const mapPin = new L.Icon({
     iconSize: new L.Point(10, 10)
 });
 
+const mapPinSelected = new L.Icon({
+    iconUrl: require('./img/map-pin-selected.svg'),
+    iconSize: new L.Point(10, 10)
+});
+
 const readyMarker = new L.Icon({
     iconUrl: require('./img/map-marker-alt-solid.svg'),
     iconSize: new L.Point(20, 20)
@@ -15,4 +20,4 @@ const notReadyMarker = new L.Icon({
     iconSize: new L.Point(20, 20)
 });
 
-export { mapPin, readyMarker, notReadyMarker };
+export { mapPin, mapPinSelected, readyMarker, notReadyMarker };

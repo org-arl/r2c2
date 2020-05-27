@@ -36,6 +36,7 @@ class CursorPositionComponent extends React.Component {
 	}
 
 	selectMission(index) {
+		this.props.selectMissionPointFunc(0);
 		if (index === this.state.selectedMission) {
 			this.setState({
 				selectedMission: 0,
@@ -55,6 +56,7 @@ class CursorPositionComponent extends React.Component {
 		this.setState({
 			selectedMLeg: index
 		});
+		this.props.selectMissionPointFunc(index);
 	}
 
 	addNewMission(e) {
