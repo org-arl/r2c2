@@ -65,14 +65,11 @@ function MissionTask() {
 	this.payload = {};
 }
 
-
 function SimpleMT() {
 	this.taskID = "SimpleMT";
 	this.endHeading = 0.0;
 	MissionTask.call(this);
 }
-// SimpleMT.prototype = Object.create(MissionTask.prototype);
-// SimpleMT.prototype.taskID = "SimpleMT";
 
 function LawnMoverMT() {
 	this.taskID = "LawnMoverMT";
@@ -156,9 +153,10 @@ class MapComponent extends React.Component {
 		this.addNewMission = this.addNewMission.bind(this);
 		this.cancelNewMission = this.cancelNewMission.bind(this);
 
-		this.mapOnClick = this.mapOnClick.bind(this);
+		this.mapOnRightClick = this.mapOnRightClick.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
-		this.moveGeoFenceMarker = this.moveGeoFenceMarker.bind(this);
+
+		this.dragEndGeoFenceMarker = this.dragEndGeoFenceMarker.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
@@ -482,7 +480,8 @@ class MapComponent extends React.Component {
 		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
 	}
 
-	mapOnClick(e) {
+	// executes on right click on map.
+	mapOnRightClick(e) {
 		console.log(e.latlng);
 		if (this.state.drawingGeoFence) {
 
@@ -522,21 +521,27 @@ class MapComponent extends React.Component {
 		});
 	}
 
-	moveGeoFenceMarker(e) {
-		// var newlat = e.latlng.lat;
-		// var newlng = e.latlng.lng;
-		// var drawGeoFenceArr = this.state.drawGeoFence;
-		// for (var i = 0; i < drawGeoFenceArr.length; i++) {
-		// 	if ( drawGeoFenceArr[i][0] === e.oldLatLng.lat && drawGeoFenceArr[i][1] === e.oldLatLng.lng ){
-		// 		drawGeoFenceArr[i] = [newlat, newlng];
-		// 		console.log("hello");
-		// 	}
-		// }
-		// this.setState({
-		// 	drawGeoFence: drawGeoFenceArr
-		// });
-		// console.log(this.state.drawGeoFence);
+	dragEndGeoFenceMarker(e) {
+		console.log(e);
+		var newlat = e.target._latlng.lat;
+		var newlng = e.target._latlng.lng;
+		var oldlat = e.target.options.position[0];
+		var oldlng = e.target.options.position[1];
+		var drawGeoFenceArr = this.state.drawGeoFence;
+		for (var i = 0; i < drawGeoFenceArr.length; i++) {
+			if ( drawGeoFenceArr[i][0] === oldlat && drawGeoFenceArr[i][1] === oldlng ){
+				drawGeoFenceArr[i] = [newlat, newlng];
+				console.log("moved" + i);
+			}
+		}
+		this.setState({
+			drawGeoFence: []
+		});
+		this.setState({
+			drawGeoFence: drawGeoFenceArr
+		});
 	}
+
 
 	toggleMissionPlanner(e) {
 		if (this.state.displayMissionPlanner) {
@@ -605,7 +610,7 @@ class MapComponent extends React.Component {
 		if (this.state.drawingGeoFence) {
 			for (var i = 0; i < this.state.drawGeoFence.length; i++) {
 				// drawGeoFenceMarkers.push(<Marker onMove={this.moveGeoFenceMarker} icon={mapPin} key={i} draggable={true} position={this.state.drawGeoFence[i]}></Marker>);
-				drawGeoFenceMarkers.push(<Marker onMove={this.moveGeoFenceMarker} icon={mapPin} key={i} position={this.state.drawGeoFence[i]}></Marker>);
+				drawGeoFenceMarkers.push(<Marker draggable={true} onDragEnd={this.dragEndGeoFenceMarker} icon={mapPin} key={"newGeoFence" + i} position={this.state.drawGeoFence[i]}></Marker>);
 			}
 		}
 
@@ -640,10 +645,9 @@ class MapComponent extends React.Component {
 		</Row> :
 		null;
 
-
 		return (
 			<div>
-				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onClick={this.mapOnClick} onMouseMove={this.onMouseMove}>
+				<LeafletMap ref={(ref) => this.mapRef = ref} center={mapCenter} zoom={this.state.zoom} onContextMenu={this.mapOnRightClick} onMouseMove={this.onMouseMove}>
 					<TileLayer
 						attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 						url={tileUrl}
@@ -674,16 +678,16 @@ class MapComponent extends React.Component {
 							</div>
 						</div>
 						<Button type="submit" onClick={this.recentreMap}><FontAwesomeIcon icon={faCrosshairs}  title="Re-center Map"/></Button>
-						<Button type="submit" onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
-						<Button type="submit" onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
-						<Button type="submit" onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
+						<Button type="submit" active={this.state.displayGeoFence} onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
+						<Button type="submit" active={this.state.displayMissionPts} onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
+						<Button type="submit" active={this.state.displayVehiclePath} onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
 
 						<div className="drawGeoFence_styles">
 							<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
 							{drawGeoFenceOptions}
 						</div>
 						<div>
-							<Button type="submit" onClick={this.toggleMissionPlanner}>MissionPlanner</Button>
+							<Button type="submit"active={this.state.displayMissionPlanner} onClick={this.toggleMissionPlanner}>MissionPlanner</Button>
 						</div>
 					</Row>
 
