@@ -49,3 +49,17 @@ ul {
 	cursor: pointer;
 	margin-left: 20px;
 }
+
+.cancelAddMissionBtn{
+	margin: 10px;
+	cursor: pointer;
+	color: red;
+	font-size: 1.3em;
+}
+
+.saveNewMissionBtn{
+	margin: 10px;
+	cursor: pointer;
+	color: green;
+	font-size: 1.3em;
+}
