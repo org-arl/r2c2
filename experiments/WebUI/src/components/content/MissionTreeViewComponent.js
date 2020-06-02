@@ -42,6 +42,7 @@ class CursorPositionComponent extends React.Component {
 				selectedMission: 0,
 				selectedMLeg: 0
 			});
+			this.props.viewMissionFunc(-1);
 			return;
 		}
 
@@ -63,14 +64,18 @@ class CursorPositionComponent extends React.Component {
 		console.log("add new mission");
 		this.props.addNewMissionFunc();
 		this.setState({
-			addMissionMode: true
+			addMissionMode: true,
+			selectedMission: this.props.missions.length + 1,
+			selectedMLeg: 0
 		});
 	}
 
 	cancelAddMission(e) {
 		this.props.cancelNewMissionFunc();
 		this.setState({
-			addMissionMode: false
+			addMissionMode: false,
+			selectedMission: 0,
+			selectedMLeg: 0
 		});
 	}
 
