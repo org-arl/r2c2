@@ -642,7 +642,7 @@ class MapComponent extends React.Component {
 		if (this.state.missionNumber !== -1) {
 
 			for (var i=0; i < this.state.currentMission.length; i++){
-				console.log(this.state.missions);
+				// console.log(this.state.missions);
 				var lat = this.state.currentMission[i][0];
 				var long = this.state.currentMission[i][1];
 				var x = this.coordSys.long2locx(long);

@@ -28,6 +28,7 @@ class CursorPositionComponent extends React.Component {
 		super(props, context);
 
 		this.state = {
+			missions: this.props.missions,
 			selectedMission: 0,
 			selectedMLeg: 0,
 			addMissionMode: false
@@ -65,7 +66,7 @@ class CursorPositionComponent extends React.Component {
 		this.props.addNewMissionFunc();
 		this.setState({
 			addMissionMode: true,
-			selectedMission: this.props.missions.length + 1,
+			selectedMission: this.state.missions.length + 1,
 			selectedMLeg: 0
 		});
 	}
@@ -96,7 +97,19 @@ class CursorPositionComponent extends React.Component {
 	discardChanges(missionNumber) {
 		// Yet to be implemented on backend
 		// this.props.management.discardMissionChanges(missionNumber);
-		console.log("Discard changes for Mission " + missionNumber);
+		var missionsArray = this.state.missions;
+		this.props.management.getMissions()
+			.then(missions => {
+				console.log("Discarding changes for Mission " + missionNumber);
+				missionsArray[missionNumber - 1] = missions[missionNumber - 1];
+				this.setState({
+					missions: missionsArray
+				});
+				this.props.viewMissionFunc(missionNumber-1);
+			})
+			.catch(reason => {
+				console.log('Error: could not get missions from vehicle', reason);
+			});
 	}
 
 	deleteMission(missionNumber) {
@@ -110,9 +123,9 @@ class CursorPositionComponent extends React.Component {
 		var missionList = [];
 		var missionLeg = null;
 
-		if (this.props.missions !== null) {
+		if (this.state.missions !== null) {
 
-			this.props.missions.forEach((mission, i) => {
+			this.state.missions.forEach((mission, i) => {
 
 				var missionLegList = [];
 				mission.forEach((missionLeg, j) => {
@@ -120,7 +133,7 @@ class CursorPositionComponent extends React.Component {
 					missionLegList.push(<ListGroup.Item action className={activeMleg} onClick={() => this.selectMleg(j+1)}>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x.toFixed(2)}, {missionLeg.mp.y.toFixed(2)}, {missionLeg.mp.z.toFixed(2)}</ListGroup.Item>);
 				});
 
-				missionLegList.push(<ListGroup.Item action > + </ListGroup.Item>);
+				missionLegList.push(<ListGroup.Item className="AddMissionPointComment"> Right Click on map to add mission point </ListGroup.Item>);
 
 				var nestedClass = (this.state.selectedMission === (i+1)) ? "show-nested" : "hide-nested";
 				var caretDown = (this.state.selectedMission === (i+1)) ? "caret caret-down" : "caret";
@@ -138,7 +151,7 @@ class CursorPositionComponent extends React.Component {
 			});
 
 
-			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.props.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
+			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.state.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
 			// console.log(missionLeg);
 		}
 		if (this.state.addMissionMode === false) {
