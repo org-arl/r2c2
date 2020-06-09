@@ -87,6 +87,18 @@ class CursorPositionComponent extends React.Component {
 		});
 	}
 
+	saveChanges(missionNumber) {
+		// Yet to be implemented on backend
+		// this.props.management.saveMissionChanges(missionNumber);
+		console.log("Save changes for Mission " + missionNumber);
+	}
+
+	discardChanges(missionNumber) {
+		// Yet to be implemented on backend
+		// this.props.management.discardMissionChanges(missionNumber);
+		console.log("Discard changes for Mission " + missionNumber);
+	}
+
 	deleteMission(missionNumber) {
 		// Yet to be implemented on backend
 		// this.props.management.deleteMission(missionNumber);
@@ -113,7 +125,11 @@ class CursorPositionComponent extends React.Component {
 				var nestedClass = (this.state.selectedMission === (i+1)) ? "show-nested" : "hide-nested";
 				var caretDown = (this.state.selectedMission === (i+1)) ? "caret caret-down" : "caret";
 				missionList.push(
-					<ListGroup.Item><span onClick={() => this.selectMission(i+1)} className={caretDown}>Mission No. {i+1}</span> <FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
+					<ListGroup.Item>
+						<span onClick={() => this.selectMission(i+1)} className={caretDown}>Mission No. {i+1}</span>
+						<FontAwesomeIcon className="saveChangesBtn" icon={faSave} onClick={() => this.saveChanges(i+1)} title="Save Changes to Mission"/>
+						<FontAwesomeIcon className="discardChangesBtn" icon={faTimes} onClick={() => this.discardChanges(i+1)} title="Discard Changes to Mission"/>
+						<FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
 						<ListGroup className={nestedClass}>
 							{missionLegList}
 						</ListGroup>

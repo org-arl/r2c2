@@ -511,7 +511,7 @@ class MapComponent extends React.Component {
 				drawGeoFence: [...this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]]
 			});
 
-		} else if (this.state.MissionPlannerEnabled) {
+		} else if (this.state.MissionPlannerEnabled && this.state.missionNumber !== -1) {
 
 			this.setState({
 				currentMission: [...this.state.currentMission, [e.latlng.lat, e.latlng.lng]]
