@@ -81,3 +81,8 @@ ul {
 	font-size: 0.75em;
 	color: #666;
 }
+
+.editedMission{
+	color: red;
+	font-size: 1.5em;
+}

@@ -126,6 +126,7 @@ class MapComponent extends React.Component {
 			},
 
 			missions: null, //all missions
+			editedMissions: null, //shows status of a mission (whether changes have been saved to vehicle) For each mission, 0: unedited, 1: edited.
 
 			// -1 depicts that no mission is displayed on screen. Which is the default.
 			missionNumber: -1,
@@ -152,9 +153,6 @@ class MapComponent extends React.Component {
 		this.saveNewGeoFence = this.saveNewGeoFence.bind(this);
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
-		this.addNewMission = this.addNewMission.bind(this);
-		this.cancelNewMission = this.cancelNewMission.bind(this);
-
 		this.mapOnRightClick = this.mapOnRightClick.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
 
@@ -164,7 +162,6 @@ class MapComponent extends React.Component {
 		this.vehicleMarker = readyMarker;
 
 		this.vehicleId = null;
-		// this.missions = null;
 
 		this.selectMissionPoint = this.selectMissionPoint.bind(this);
 
@@ -227,9 +224,9 @@ class MapComponent extends React.Component {
 						console.log('missions', missions);
 						// this.missions = missions;
 						this.setState({
-							missions: missions
+							missions: missions,
+							editedMissions: new Array(missions.length).fill(0)
 						});
-						this.numberOfMissions = missions.length;
 					})
 					.catch(reason => {
 						console.log('could not get missions', reason);
@@ -359,7 +356,6 @@ class MapComponent extends React.Component {
 	}
 
 	viewMission(num){
-
 		if (this.state.missions === null) {
 			console.log('no missions available');
 			this.setState({
@@ -467,29 +463,6 @@ class MapComponent extends React.Component {
 		});
 	}
 
-	addNewMission(e){
-		if (!this.state.drawingGeoFence) {
-			this.setState({
-				missions: [...this.state.missions, []],
-				currentMission: [],
-				missionNumber: this.state.missions.length
-			});
-		}
-	}
-
-	cancelNewMission(e){
-		var missions = this.state.missions;
-		if (this.state.missions.length > 0) {
-			missions.splice(-1, 1);
-			this.setState({
-				missions: missions,
-				missionNumber: -1,
-				currentMission: []
-			});
-
-		}
-	}
-
 	selectMissionPoint(index) {
 		this.setState({
 			selectedMissionPoint: index
@@ -522,11 +495,15 @@ class MapComponent extends React.Component {
 			mission_task.mp.y = this.coordSys.lat2locy(e.latlng.lat);
 
 			console.log(mission_task);
-			// this.missions[this.missions.length - 1].push(mission_task);
+
 			var missions = this.state.missions;
+			var editedMissions = this.state.editedMissions;
+			console.log(this.state.editedMissions);
 			missions[this.state.missionNumber].push(mission_task);
+			editedMissions[this.state.missionNumber] = 1;
 			this.setState({
-				missions: missions
+				missions: missions,
+				editedMissions: editedMissions
 			});
 			console.log(this.state.missions);
 		}
@@ -574,6 +551,8 @@ class MapComponent extends React.Component {
 		var newY = this.coordSys.lat2locy(e.target._latlng.lat);
 
 		var missionsArr = this.state.missions;
+		var editedMissions = this.state.editedMissions;
+
 		var currentMission = missionsArr[this.state.missionNumber];
 
 		console.log(oldX + " " + oldY + " " + newX + " " + newY);
@@ -588,8 +567,11 @@ class MapComponent extends React.Component {
 			}
 		}
 
+		editedMissions[this.state.missionNumber] = 1;
+
 		this.setState({
 			missions: missionsArr,
+			editedMissions: editedMissions,
 			currentMission: []
 		});
 		this.viewMission(this.state.missionNumber);
@@ -629,9 +611,11 @@ class MapComponent extends React.Component {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
 		const mapCenter = [this.state.mapCenter.latitude, this.state.mapCenter.longitude];
 
-		var missionList = new Array(this.numberOfMissions).fill(0).map((zero, index) =>
-			<div key={index}> {index+1} <Button onClick={() => this.viewMission(index)}>View</Button> <Button onClick={() => this.runMission(index)}>Run</Button></div>
-		);
+		if (this.state.missions != null) {
+			var missionList = new Array(this.state.missions.length).fill(0).map((zero, index) =>
+				<div key={index}> {index+1} <Button onClick={() => this.viewMission(index)}>View</Button> <Button onClick={() => this.runMission(index)}>Run</Button></div>
+			);
+		}
 
 
 		// Create array containing mission points from the this.state.missions variable.
@@ -704,7 +688,7 @@ class MapComponent extends React.Component {
 
 		const MissionPlannerPanels = (this.state.MissionPlannerEnabled) ?
 		<Row>
-			<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} addNewMissionFunc={this.addNewMission} cancelNewMissionFunc={this.cancelNewMission} viewMissionFunc={this.viewMission} missions={this.state.missions} management={this.management}/>
+			<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} viewMissionFunc={this.viewMission} missions={this.state.missions} editedMissions={this.state.editedMissions} management={this.management}/>
 		</Row> :
 		null;
 
