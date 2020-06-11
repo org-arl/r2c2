@@ -350,6 +350,10 @@ class MapComponent extends React.Component {
 	}
 
 	runMission(num) {
+		if (this.state.editedMissions[num] === 1) {
+			alert("Error: Unsaved Changes. Save mission to vehicle before running.");
+			return;
+		}
 		this.viewMission(num);
 		//todo: should there be some response to check if mission has been run?
 		this.management.runMission(parseInt(num) + 1);
