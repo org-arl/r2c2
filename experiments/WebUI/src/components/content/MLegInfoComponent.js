@@ -18,25 +18,28 @@ const styles = StyleSheet.create({
 class MLegInfoComponent extends React.Component {
 	constructor(props, context) {
 		super(props, context);
-		// // Make deep copy of missionLeg object so that changes dont get saved instantly.
-		// var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
+
 		this.state = {
 			missionLeg: this.props.missionLeg,
-			editMode: this.props.editMode
+			editedMissions: this.props.editedMissions
 		}
 	}
 
 	componentDidUpdate(prevProps) {
 		if (prevProps.missionLeg !== this.props.missionLeg) {
-			// console.log(this.state.missionLeg);
 
-			// // Make deep copy of missionLeg object so that changes dont get saved instantly.
-			// var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
 			this.setState({
 				missionLeg: this.props.missionLeg,
-				editMode: this.props.editMode
 			});
 		}
+	}
+
+	modifyEditedMissionsArr(){
+		var editedMissions = this.state.editedMissions;
+		editedMissions[this.props.missionIndex - 1] = 1;
+		this.setState({
+			editedMissions: editedMissions
+		});
 	}
 
 	onPropertyChange(e) {
@@ -51,6 +54,7 @@ class MLegInfoComponent extends React.Component {
 			missionLeg: missionLeg
 		});
 
+		this.modifyEditedMissionsArr();
 		this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
 	}
 
@@ -60,6 +64,7 @@ class MLegInfoComponent extends React.Component {
 		this.setState({
 			missionLeg: missionLeg
 		});
+		this.modifyEditedMissionsArr();
 	}
 
 	onPayloadChange(e) {
@@ -68,22 +73,8 @@ class MLegInfoComponent extends React.Component {
 		this.setState({
 			missionLeg: missionLeg
 		});
+		this.modifyEditedMissionsArr();
 	}
-
-	// saveChanges() {
-	// 	// creating a copy of the state.missionLeg and then assigning it to props.missionLeg to prevent further direct modification to props.missionLeg which would have pointed to state.missionLeg due to assign.
-	// 	Object.assign(this.props.missionLeg, JSON.parse(JSON.stringify(this.state.missionLeg)));
-	// 	// console.log(this.props.missionIndex);
-	// 	this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
-	// }
-	//
-	// discardChanges() {
-	// 	var missionLeg = JSON.parse(JSON.stringify(this.props.missionLeg));
-	// 	this.setState({
-	// 		missionLeg: missionLeg,
-	// 		editMode: this.props.editMode
-	// 	});
-	// }
 
 	render() {
 		var propertyTableRows = [];
@@ -120,7 +111,6 @@ class MLegInfoComponent extends React.Component {
 					(
 						<tr key={key}>
 							<td>{key}</td>
-							{/* <td><div contentEditable={this.props.editMode}>{params[key]}</div></td> */}
 							<td><FormControl name={key} onChange={(e) => this.onParamChange(e)} value={params[key]}></FormControl></td>
 						</tr>
 					);
@@ -128,11 +118,6 @@ class MLegInfoComponent extends React.Component {
 			}
 
 			payloadObject = this.state.missionLeg.payload;
-
-			// actionButtons = <div>
-			// 	<Button variant="success" onClick={() => this.saveChanges()}>Save Changes</Button>
-			// 	<Button variant="danger" onClick={() => this.discardChanges()}>Discard Changes</Button>
-			// </div>;
 		}
 
 		const Properties =

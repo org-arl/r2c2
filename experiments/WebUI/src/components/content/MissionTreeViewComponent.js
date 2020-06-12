@@ -28,9 +28,10 @@ class CursorPositionComponent extends React.Component {
 		super(props, context);
 
 		this.state = {
+			missions: this.props.missions,
+			editedMissions: this.props.editedMissions,
 			selectedMission: 0,
-			selectedMLeg: 0,
-			addMissionMode: false
+			selectedMLeg: 0
 		}
 
 	}
@@ -42,6 +43,7 @@ class CursorPositionComponent extends React.Component {
 				selectedMission: 0,
 				selectedMLeg: 0
 			});
+			this.props.viewMissionFunc(-1);
 			return;
 		}
 
@@ -61,31 +63,71 @@ class CursorPositionComponent extends React.Component {
 
 	addNewMission(e) {
 		console.log("add new mission");
-		this.props.addNewMissionFunc();
+		var missionsArr = this.state.missions;
+		var editedMissions = this.state.editedMissions;
+
+		missionsArr.push([]);
+		editedMissions.push(1);
+
 		this.setState({
-			addMissionMode: true
+			missions: missionsArr,
+			editedMissions: editedMissions,
+			selectedMission: this.state.missions.length,
+			selectedMLeg: 0
 		});
+		this.props.viewMissionFunc(this.state.missions.length - 1);
+
 	}
 
-	cancelAddMission(e) {
-		this.props.cancelNewMissionFunc();
-		this.setState({
-			addMissionMode: false
-		});
+	saveChanges(missionNumber) {
+		console.log("Saving changes for Mission " + missionNumber);
+		// Yet to be implemented on backend
+		// this.props.management.saveMissionChanges(missionNumber, this.state.missions[missionNumber - 1])
+		// 	.then(response => {
+		// 		console.log(response);
+		// 		var editedMissions = this.state.editedMissions;
+		// 		editedMissions[missionNumber - 1] = 0;
+		//		this.setState({
+		// 			editedMissions: editedMissions
+		// 		});
+		// 	})
+		// 	.catch(reason => {
+		// 		console.log('Error: could not save mission to the vehicle', reason);
+		// 	});
 	}
 
-	saveNewMission(){
-		// Yet to be implemented. Save newest mission.
-		console.log("Saved new mission");
-		this.setState({
-			addMissionMode: false
-		});
+	discardChanges(missionNumber) {
+		var missionsArray = this.state.missions;
+		var editedMissions = this.state.editedMissions;
+
+		this.props.management.getMissions()
+			.then(missions => {
+				console.log("Discarding changes for Mission " + missionNumber);
+				if ( missionNumber > missions.length ) {
+					console.log("discarding new mission");
+					missionsArray.splice(missionNumber - 1, 1);
+					editedMissions.splice(missionNumber - 1, 1);
+					missionNumber = 0;
+				} else {
+					missionsArray[missionNumber - 1] = missions[missionNumber - 1];
+					editedMissions[missionNumber - 1] = 0;
+				}
+
+				this.setState({
+					missions: missionsArray,
+					editedMissions: editedMissions
+				});
+				this.selectMission(missionNumber);
+			})
+			.catch(reason => {
+				console.log('Error: could not get missions from vehicle', reason);
+			});
 	}
 
 	deleteMission(missionNumber) {
 		// Yet to be implemented on backend
 		// this.props.management.deleteMission(missionNumber);
-		console.log("Delete Mission " + missionNumber);
+		console.log("Deleting Mission " + missionNumber);
 	}
 
 	render() {
@@ -93,9 +135,9 @@ class CursorPositionComponent extends React.Component {
 		var missionList = [];
 		var missionLeg = null;
 
-		if (this.props.missions !== null) {
+		if (this.state.missions !== null) {
 
-			this.props.missions.forEach((mission, i) => {
+			this.state.missions.forEach((mission, i) => {
 
 				var missionLegList = [];
 				mission.forEach((missionLeg, j) => {
@@ -103,12 +145,20 @@ class CursorPositionComponent extends React.Component {
 					missionLegList.push(<ListGroup.Item action className={activeMleg} onClick={() => this.selectMleg(j+1)}>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x.toFixed(2)}, {missionLeg.mp.y.toFixed(2)}, {missionLeg.mp.z.toFixed(2)}</ListGroup.Item>);
 				});
 
-				missionLegList.push(<ListGroup.Item action > + </ListGroup.Item>);
+				missionLegList.push(<ListGroup.Item className="AddMissionPointComment"> Right Click on map to add mission point </ListGroup.Item>);
 
 				var nestedClass = (this.state.selectedMission === (i+1)) ? "show-nested" : "hide-nested";
 				var caretDown = (this.state.selectedMission === (i+1)) ? "caret caret-down" : "caret";
+				var editedAstrix = "";
+				if (this.state.editedMissions[i] === 1) {
+					editedAstrix = <span className="editedMission"> * </span>
+				}
 				missionList.push(
-					<ListGroup.Item><span onClick={() => this.selectMission(i+1)} className={caretDown}>Mission No. {i+1}</span> <FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
+					<ListGroup.Item>
+						<span onClick={() => this.selectMission(i+1)} className={caretDown}>{editedAstrix} Mission No. {i+1}</span>
+						<FontAwesomeIcon className="saveChangesBtn" icon={faSave} onClick={() => this.saveChanges(i+1)} title="Save Changes to Mission"/>
+						<FontAwesomeIcon className="discardChangesBtn" icon={faTimes} onClick={() => this.discardChanges(i+1)} title="Discard Changes to Mission"/>
+						<FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
 						<ListGroup className={nestedClass}>
 							{missionLegList}
 						</ListGroup>
@@ -117,19 +167,11 @@ class CursorPositionComponent extends React.Component {
 			});
 
 
-			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.props.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
+			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.state.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
 			// console.log(missionLeg);
 		}
-		if (this.state.addMissionMode === false) {
-			missionList.push(<ListGroup.Item onClick={() => this.addNewMission()} className="addMissionBtn"> + </ListGroup.Item>);
-		} else {
-			missionList.push(
-				<ListGroup.Item>
-					<FontAwesomeIcon className="cancelAddMissionBtn" icon={faTimes} onClick={() => this.cancelAddMission()} title="Cancel New Mission"/>
-					<FontAwesomeIcon className="saveNewMissionBtn" icon={faSave} onClick={() => this.saveNewMission()} title="Save New Mission"/>
-				</ListGroup.Item>
-			);
-		}
+
+		missionList.push(<ListGroup.Item onClick={() => this.addNewMission()} className="addMissionBtn"> + </ListGroup.Item>);
 
 
 		return (
@@ -139,7 +181,7 @@ class CursorPositionComponent extends React.Component {
 						{missionList}
 					</ul>
 				</div>
-				<MLegInfoComponent editMode={this.state.addMissionMode} refreshMissionMarkersFunc={this.props.viewMissionFunc} missionIndex={this.state.selectedMission} missionLeg={missionLeg}/>
+				<MLegInfoComponent refreshMissionMarkersFunc={this.props.viewMissionFunc} missionIndex={this.state.selectedMission} missionLeg={missionLeg} editedMissions={this.state.editedMissions}/>
 			</div>
 		);
 	}

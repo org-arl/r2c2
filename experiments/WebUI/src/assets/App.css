@@ -150,6 +150,9 @@
 
 .dropdown_styles:hover .dropdown_content {display: block;}
 
+.mission_options{
+	margin-left: 15px;
+}
 /******* DrawGeoFence styles *******/
 .drawGeoFence_styles{
 	position: relative;

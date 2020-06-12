@@ -45,9 +45,22 @@ ul {
 	cursor: pointer;
 }
 
+.saveChangesBtn{
+	cursor: pointer;
+	margin-left: 10px;
+	color: green;
+}
+
+.discardChangesBtn{
+	cursor: pointer;
+	margin-left: 10px;
+	color: orange;
+}
+
 .deleteMissionBtn{
 	cursor: pointer;
-	margin-left: 20px;
+	margin-left: 10px;
+	color: red;
 }
 
 .cancelAddMissionBtn{
@@ -62,4 +75,14 @@ ul {
 	cursor: pointer;
 	color: green;
 	font-size: 1.3em;
+}
+
+.AddMissionPointComment{
+	font-size: 0.75em;
+	color: #666;
+}
+
+.editedMission{
+	color: red;
+	font-size: 1.5em;
 }
