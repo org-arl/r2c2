@@ -150,71 +150,34 @@ class D3BearingComponent extends React.Component{
 			.attr('d', pointerLine)
 			.attr('transform', 'rotate(' + this.props.minAngle +')');
 
-        const lineData2 = [ [this.props.pointerWidth / 2, 0],
+
+		// **************** Target Pointers ************ //
+		const lineData2 = [ [this.props.pointerWidth / 2, 0],
 						[0, -pointerHeadLength],
 						[-(this.props.pointerWidth / 2), 0],
 						[0, this.props.pointerTailLength],
 						[this.props.pointerWidth / 2, 0] ];
 		const pointerLine2 = d3.line().curve(d3.curveMonotoneX);
 		const pg2 = svg.append('g').data([lineData2])
-				.attr('class', 'pointer')
+				.attr('class', 'pointer2')
 				.attr('transform', centerTx);
 
 		this.pointer2 = pg2.append('path')
-			.attr('d', pointerLine2/*function(d) { return pointerLine(d) +'Z';}*/ )
+			.attr('d', pointerLine2 )
 			.attr('transform', 'rotate(' + this.props.minAngle +')');
 
 
-
-		// **************** Target Pointers ************ //
-		const lineData3 = [ [this.props.pointerWidth / 2, 0],
-						[0, -pointerHeadLength],
-						[-(this.props.pointerWidth / 2), 0],
-						[0, this.props.pointerTailLength],
-						[this.props.pointerWidth / 2, 0] ];
-		const pointerLine3 = d3.line().curve(d3.curveMonotoneX);
-		const pg3 = svg.append('g').data([lineData3])
-				.attr('class', 'pointer2')
-				.attr('transform', centerTx);
-
-		this.pointer3 = pg3.append('path')
-			.attr('d', pointerLine3 )
-			.attr('transform', 'rotate(' + this.props.minAngle +')');
-
-
-		const lineData4 = [ [this.props.pointerWidth / 2, 0],
-						[0, -pointerHeadLength],
-						[-(this.props.pointerWidth / 2), 0],
-						[0, this.props.pointerTailLength],
-						[this.props.pointerWidth / 2, 0] ];
-		const pointerLine4 = d3.line().curve(d3.curveMonotoneX);
-		const pg4 = svg.append('g').data([lineData4])
-				.attr('class', 'pointer2')
-				.attr('transform', centerTx);
-
-		this.pointer4 = pg4.append('path')
-			.attr('d', pointerLine4/*function(d) { return pointerLine(d) +'Z';}*/ )
-			.attr('transform', 'rotate(' + this.props.minAngle +')');
-
-
-
-		this.update(10);
+		this.update(20);
 		this.setTarget(0);
 	}
 
 	update(newValue) {
 		const ratio1 = this.scale(newValue);
 		const newAngle1 = this.props.minAngle + (ratio1 * this.range);
-		const ratio2 = this.scale(newValue + 180);
-		const newAngle2 = this.props.minAngle + (ratio2 * this.range);
 		this.pointer.transition()
 			.duration(0)
 			.ease(d3.easeElastic)
 			.attr('transform', 'rotate(' +newAngle1 +')');
-
-		this.pointer2.transition()
-				.duration(0)
-				.attr('transform', 'rotate(' + newAngle2 +')');
 
 		// console.log(newAngle1);
 
@@ -226,16 +189,10 @@ class D3BearingComponent extends React.Component{
 
 		const ratio1 = this.scale(newValue);
 		const newAngle1 = this.props.minAngle + (ratio1 * this.range);
-		const ratio2 = this.scale(newValue + 180);
-		const newAngle2 = this.props.minAngle + (ratio2 * this.range);
-		this.pointer3.transition()
+		this.pointer2.transition()
 			.duration(0)
 			.ease(d3.easeElastic)
 			.attr('transform', 'rotate(' + newAngle1 +')');
-
-		this.pointer4.transition()
-				.duration(0)
-				.attr('transform', 'rotate(' + newAngle2 +')');
 
 	}
 
