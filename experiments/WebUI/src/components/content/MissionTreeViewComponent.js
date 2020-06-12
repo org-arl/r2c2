@@ -167,7 +167,7 @@ class CursorPositionComponent extends React.Component {
 			});
 
 
-			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMLeg > 0) ? this.state.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
+			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMission <= this.state.missions.length && this.state.selectedMLeg > 0 && this.state.selectedMLeg <= this.state.missions[this.state.selectedMission - 1].length) ? this.state.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
 			// console.log(missionLeg);
 		}
 
