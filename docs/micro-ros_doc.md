@@ -145,6 +145,7 @@ source install/local_setup.bash
 ros2 run micro_ros_setup create_firmware_ws.sh [RTOS] olimex-stm32-e407
 
 ```
+
 You will find a folder named firmware in your workspace.
 
 ```
@@ -194,6 +195,11 @@ cd firmware/NuttX
 make menuconfig
 
 ```
+***Troubleshooting***
+
+error in flashing image: https://github.com/micro-ROS/micro-ros-build/issues/38
+
+*********** ***********
 
 This will open the NuttX menu config, which allows you to modify the configuration of the RTOS, including adding a new application.
 
@@ -219,10 +225,26 @@ Finally create a folder called uros_pingpong into uros_ws/firmware/NuttX/configs
 # Configure step
 ros2 run micro_ros_setup configure_firmware.sh uros_pingpong
 ```
+***Troubleshooting***
+
+compile error: https://github.com/micro-ROS/micro-ros-build/issues/29
+
+*********** ***********
 
 * Flash the firmware on Olimex STM32-E407 Using JTAG interface
 
 Connect Olimex ARM-USB-TINY-H to the board:
+
+***Troubleshooting***
+
+If you get error in this step, set the correct power mode by using resistor on STM32E407. The resistor needs to be removed or set manually, check on boot jumpers and USB-OTG cables.
+
+Also check page 8, [olimex_STM32-E407](https://www.olimex.com/Products/ARM/ST/STM32-E407/resources/STM32-E407.pdf)
+
+![board-pic](img/board.png)
+
+
+************ *************
 
 Make sure that the board power supply jumper (PWR_SEL) is in the 3-4 position in order to power the board from the JTAG connector:
 
@@ -349,15 +371,6 @@ Visit this link [Debugging a NuttX Application
 NOTE- Due to requirement of USB-TL232 cable I was getting errors and hence it was stopped in between.
 
 
-***Troubleshooting***
-
-1. Set correct power mode by using resistor STM32E407 can’t be used directly, some resistor needs to be removed or set manually...check it
-
-Links for solving error:
-
-2. compile error: https://github.com/micro-ROS/micro-ros-build/issues/29
-
-3. error in flashing image: https://github.com/micro-ROS/micro-ros-build/issues/38
 
 ***Document in use for more reference***:
 
