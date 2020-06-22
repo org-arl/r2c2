@@ -18,7 +18,7 @@ import { Row, Container, Dropdown, Button, DropdownButton } from 'react-bootstra
 import { StyleSheet, css } from 'aphrodite';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCrosshairs, faUndo, faSave, faWindowClose, faHome, faBan, faSatellite } from '@fortawesome/free-solid-svg-icons'
+import { faCrosshairs, faUndo, faSave, faWindowClose, faHome, faBan, faSatellite, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -151,6 +151,7 @@ class MapComponent extends React.Component {
 		this.enableDrawGeofence = this.enableDrawGeofence.bind(this);
 		this.undoGeoFencePoint = this.undoGeoFencePoint.bind(this);
 		this.saveNewGeoFence = this.saveNewGeoFence.bind(this);
+		this.clearNewGeoFence = this.clearNewGeoFence.bind(this);
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
 		this.mapOnRightClick = this.mapOnRightClick.bind(this);
@@ -437,7 +438,8 @@ class MapComponent extends React.Component {
 	enableDrawGeofence(e){
 		if (!this.state.MissionPlannerEnabled) {
 			this.setState({
-				drawingGeoFence: true
+				drawingGeoFence: true,
+				drawGeoFence: this.state.geoFenceCoordinates
 			})
 		}
 	}
@@ -453,9 +455,16 @@ class MapComponent extends React.Component {
 	saveNewGeoFence(e){
 		// TODO: add code to save geofence on vehicle and replace current geofence.
 
+		console.log("Saving new geofence (To be added on backend)");
 		this.setState({
 			drawingGeoFence: false,
 			// geoFenceCoordinates: this.state.drawGeoFence,
+			drawGeoFence: []
+		});
+	}
+
+	clearNewGeoFence(e){
+		this.setState({
 			drawGeoFence: []
 		});
 	}
@@ -669,9 +678,10 @@ class MapComponent extends React.Component {
 		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
 
 		const drawGeoFenceOptions = (this.state.drawingGeoFence) ? <div className="drawGeoFence_content">
-			<Button type="submit" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
-			<Button type="submit" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
-			<Button type="submit" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+			<Button type="submit" title="Undo last point" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
+			<Button type="submit" title="Save Geofence" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
+			<Button type="submit" title="Cancel Geofence" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+			<Button type="submit" title="Clear Geofence" onClick={this.clearNewGeoFence}><FontAwesomeIcon icon={faTrashAlt} color="#fff" /></Button>
 		</div> : null;
 
 		const drawGeoFenceMarkers = [];
