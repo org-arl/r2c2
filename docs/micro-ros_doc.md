@@ -241,7 +241,7 @@ If you get error in this step, set the correct power mode by using resistor on S
 
 Also check page 8, [olimex_STM32-E407](https://www.olimex.com/Products/ARM/ST/STM32-E407/resources/STM32-E407.pdf)
 
-![board-pic](img/board.png)
+![board-pic](../board.png)
 
 
 ************ *************
