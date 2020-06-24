@@ -66,6 +66,58 @@ export class Management {
             });
     }
 
+	/**
+     * Abort a mission.
+     *
+     */
+    abortMission() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'ABORT',
+                    vehicleID: vehicleId
+                });
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
+	/**
+     * Abort to home.
+     *
+     */
+    abortToHome() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'ABORT_TO_HOME',
+                    vehicleID: vehicleId
+                });
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
+	/**
+     * station keep.
+     *
+     */
+    stationKeep() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'STATIONKEEPING',
+                    vehicleID: vehicleId
+                });
+				console.log(request);
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
     /**
      * Gets missions.
      *
@@ -512,5 +564,68 @@ export class GetMissionsReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.GetMissionsReq', params);
+    }
+}
+
+
+//*************** Classes for different Mission types ***************
+
+export class SimpleMT extends AbstractRequest {
+
+    /**
+     * Constructs an SimpleMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.SimpleMT', params);
+    }
+}
+
+export class LawnMowerMT extends AbstractRequest {
+
+    /**
+     * Constructs an LawnMowerMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.LawnMowerMT', params);
+    }
+}
+
+export class StationKeepingMT extends AbstractRequest {
+
+    /**
+     * Constructs an StationKeepingMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.StationKeepingMT', params);
+    }
+}
+
+export class SwanArmMT extends AbstractRequest {
+
+    /**
+     * Constructs an SwanArmMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.SwanArmMT', params);
+    }
+}
+
+export class TargetLocMT extends AbstractRequest {
+
+    /**
+     * Constructs an TargetLocMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.TargetLocMT', params);
     }
 }

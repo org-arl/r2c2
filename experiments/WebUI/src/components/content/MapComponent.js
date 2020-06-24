@@ -8,7 +8,7 @@ import MissionPlanner from './MissionPlanner';
 import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
-import { Management } from "../../assets/jc2.js";
+import { Management, TargetLocMT } from "../../assets/jc2.js";
 import { mapPin, mapPinSelected, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
 // import ManualCommands from '../../assets/ManualCommands.js';
 import ToolbarComponent from '../ToolbarComponent';
@@ -300,6 +300,10 @@ class MapComponent extends React.Component {
 				positionError: this.state.positionError - 1
 			})},
 		200);
+
+		var x = new TargetLocMT();
+		console.log(x);
+		console.log("hello");
 	}
 
 	componentDidUpdate() {
@@ -607,17 +611,17 @@ class MapComponent extends React.Component {
 
 	abortMission() {
 		console.log("Abort Mission!");
-		// this.management.abortMission();
+		this.management.abortMission();
 	}
 
 	stationKeep() {
 		console.log("Station Keep!");
-		// this.management.stationKeep();
+		this.management.stationKeep();
 	}
 
 	goHome() {
 		console.log("Go Home!");
-		// this.management.goHome();
+		this.management.abortToHome();
 	}
 
 	render() {
