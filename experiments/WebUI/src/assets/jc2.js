@@ -53,6 +53,7 @@ export class Management {
      * @param {int} missionNumber Mission number.
      */
     runMission(missionNumber) {
+		console.log(missionNumber);
         this.getVehicleId()
             .then(vehicleId => {
                 const request = new OperatorCmdReq({
@@ -143,6 +144,34 @@ export class Management {
             });
     }
 
+	/**
+     * Updates a mission.
+     *
+     * @returns {Promise<Array>}
+     */
+    updateMission(updatedMission, missionNumber) {
+		console.log(updatedMission);
+		console.log(missionNumber);
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new UpdateMissionReq({
+                        recipient: this._managementAgentId,
+                        mission: updatedMission,
+                        missionNumber: missionNumber
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.perf);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
     /**
      * Gets the vehicle ID.
      *
@@ -195,6 +224,27 @@ export class Management {
                 return new Promise((resolve, reject) => {
                     const request = new GetGeofenceReq({
                         recipient: this._managementAgentId,
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.points);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+    updateGeofence(updatedGeofence) {
+		console.log(updatedGeofence);
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new UpdateGeofenceReq({
+                        recipient: this._managementAgentId,
+                        points: updatedGeofence
                     });
                     this._gateway.request(request)
                         .then(response => {
@@ -459,6 +509,17 @@ export class GetGeofenceReq extends AbstractRequest {
     }
 }
 
+export class UpdateGeofenceReq extends AbstractRequest {
+     /**
+     * Constructs an GetGeofenceReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.UpdateGeofenceReq', params);
+    }
+}
+
 export class GetHealthReq extends AbstractRequest {
 
     /**
@@ -564,6 +625,18 @@ export class GetMissionsReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.GetMissionsReq', params);
+    }
+}
+
+export class UpdateMissionReq extends AbstractRequest {
+
+    /**
+     * Constructs an UpdateMissionReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.UpdateMissionReq', params);
     }
 }
 

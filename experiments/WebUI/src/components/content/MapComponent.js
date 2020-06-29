@@ -303,7 +303,6 @@ class MapComponent extends React.Component {
 
 		var x = new TargetLocMT();
 		console.log(x);
-		console.log("hello");
 	}
 
 	componentDidUpdate() {
@@ -457,14 +456,18 @@ class MapComponent extends React.Component {
 	}
 
 	saveNewGeoFence(e){
-		// TODO: add code to save geofence on vehicle and replace current geofence.
-
-		console.log("Saving new geofence (To be added on backend)");
-		this.setState({
-			drawingGeoFence: false,
-			// geoFenceCoordinates: this.state.drawGeoFence,
-			drawGeoFence: []
+		console.log("Saving new geofence");
+		this.management.updateGeofence(this.state.drawGeoFence)
+		.then(response => {
+			this.setState({
+				drawingGeoFence: false,
+				geoFenceCoordinates: this.state.drawGeoFence,
+			});
+		})
+		.catch(reason => {
+			console.log('Could not update geofence ', reason);
 		});
+
 	}
 
 	clearNewGeoFence(e){
@@ -489,7 +492,7 @@ class MapComponent extends React.Component {
 	openNewWindow(tab) {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
-		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
+		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1").focus();
 	}
 
 	// executes on right click on map.
@@ -502,7 +505,6 @@ class MapComponent extends React.Component {
 			});
 
 		} else if (this.state.MissionPlannerEnabled && this.state.missionNumber !== -1) {
-
 			this.setState({
 				currentMission: [...this.state.currentMission, [e.latlng.lat, e.latlng.lng]]
 			});

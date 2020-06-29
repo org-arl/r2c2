@@ -65,13 +65,11 @@ class App extends React.Component {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
 		var w = parentWindow.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
-	}
+		// Hack used to bring focus to child window opened from another child window (close and reopen)
+		w.close();
+		w = parentWindow.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
 
-	// openToolbar(){
-	// 	const href = window.location.href;
-	// 	const url = href.substring(0, href.lastIndexOf('/') + 1) + 'Toolbar';
-	// 	window.open(url, "_blank", "width=800,height=100,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
-	// }
+	}
 
 	toggleNav() {
 		var sidebar = document.getElementById("sidebar");
@@ -125,7 +123,6 @@ class App extends React.Component {
 											<Route path="/Diagnostics" component={() => <DiagnosticsComponent/>}/>
 											<Route path="/Sentuators" component={() => <SentuatorsComponent/>}/>
 											<Route path="/ScriptControl" component={() => <ScriptControl/>}/>
-											<Route path="/Toolbar" component={() => <ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(window, clickedItem)}}/>}/>
 											<Route path="*" component={() => <MapComponent/>}/>
 											{/* <Route path="*" component={() => <Main onClick={() => {this.openToolbar()}}/>}/> */}
 										</Switch>
