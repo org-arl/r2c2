@@ -154,6 +154,7 @@ class MapComponent extends React.Component {
 		this.clearNewGeoFence = this.clearNewGeoFence.bind(this);
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
+		this.checkCollinear = this.checkCollinear.bind(this);
 		this.mapOnRightClick = this.mapOnRightClick.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
 
@@ -495,19 +496,49 @@ class MapComponent extends React.Component {
 		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1").focus();
 	}
 
-	// executes on right click on map.
+	checkCollinear(pointArray, point) {
+		// epsilon accounts for the error in checking if a point is collinear. Larger epsilon will result in wider range of points getting accepted as collinear(even those that lie further from the line segment).
+		var epsilon = 0.000001;
+		// check if the point lies between any 2 of the consecutive mission points.
+		for (var i = 1; i < pointArray.length; i++) {
+			var crossProduct = (point[1] - pointArray[i-1][1]) * (pointArray[i][0] - pointArray[i-1][0]) - (point[0] - pointArray[i-1][0]) * (pointArray[i][1] - pointArray[i-1][1]);
+			if(Math.abs(crossProduct) < epsilon){
+				var dotProduct = (point[0] - pointArray[i-1][0]) * (pointArray[i][0] - pointArray[i-1][0]) + (point[1] - pointArray[i-1][1])*(pointArray[i][1] - pointArray[i-1][1]);
+				if (dotProduct >= 0) {
+					var squaredLength = (pointArray[i][0] - pointArray[i-1][0])*(pointArray[i][0] - pointArray[i-1][0]) + (pointArray[i][1] - pointArray[i-1][1])*(pointArray[i][1] - pointArray[i-1][1]);
+					if (dotProduct <= squaredLength) {
+						return i; //returns index on first match
+					}
+				}
+			}
+		}
+		return -1; //if not collinear
+	}
+
 	mapOnRightClick(e) {
 		console.log(e.latlng);
 		if (this.state.drawingGeoFence) {
-
+			var index = this.checkCollinear(this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]);
+			var drawGeoFenceArr = this.state.drawGeoFence;
+			if (index === -1) {
+				console.log("Appending point at the end");
+				drawGeoFenceArr.push([e.latlng.lat, e.latlng.lng]);
+			} else {
+				console.log("Inserting point between collinear points");
+				drawGeoFenceArr.splice(index, 0, [e.latlng.lat, e.latlng.lng]);
+			}
+			// hack to redraw the geofence polygon.
 			this.setState({
-				drawGeoFence: [...this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]]
+				drawGeoFence: []
+			});
+			this.setState({
+				drawGeoFence: drawGeoFenceArr
 			});
 
 		} else if (this.state.MissionPlannerEnabled && this.state.missionNumber !== -1) {
-			this.setState({
-				currentMission: [...this.state.currentMission, [e.latlng.lat, e.latlng.lng]]
-			});
+
+			var index = this.checkCollinear(this.state.currentMission, [e.latlng.lat, e.latlng.lng]);
+			var currentMissionArr = this.state.currentMission;
 
 			var mission_task = new SimpleMT();
 			mission_task.mp.x = this.coordSys.long2locx(e.latlng.lng);
@@ -517,12 +548,24 @@ class MapComponent extends React.Component {
 
 			var missions = this.state.missions;
 			var editedMissions = this.state.editedMissions;
-			console.log(this.state.editedMissions);
-			missions[this.state.missionNumber].push(mission_task);
+
+			if (index === -1) {
+				console.log("Appending point at the end");
+				currentMissionArr.push([e.latlng.lat, e.latlng.lng]);
+				missions[this.state.missionNumber].push(mission_task);
+			} else {
+				console.log("Inserting point between collinear points");
+				currentMissionArr.splice(index, 0, [e.latlng.lat, e.latlng.lng]);
+				missions[this.state.missionNumber].splice(index, 0, mission_task);
+			}
+
+			// console.log(this.state.editedMissions);
+
 			editedMissions[this.state.missionNumber] = 1;
 			this.setState({
 				missions: missions,
-				editedMissions: editedMissions
+				editedMissions: editedMissions,
+				currentMission: currentMissionArr
 			});
 			console.log(this.state.missions);
 		}
@@ -550,9 +593,10 @@ class MapComponent extends React.Component {
 		for (var i = 0; i < drawGeoFenceArr.length; i++) {
 			if ( drawGeoFenceArr[i][0] === oldlat && drawGeoFenceArr[i][1] === oldlng ){
 				drawGeoFenceArr[i] = [newlat, newlng];
-				console.log("moved" + i);
+				console.log("moved " + i);
 			}
 		}
+		// hack to redraw the geofence polygon.
 		this.setState({
 			drawGeoFence: []
 		});
