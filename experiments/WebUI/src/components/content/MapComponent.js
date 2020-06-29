@@ -498,7 +498,7 @@ class MapComponent extends React.Component {
 
 	checkCollinear(pointArray, point) {
 		// epsilon accounts for the error in checking if a point is collinear. Larger epsilon will result in wider range of points getting accepted as collinear(even those that lie further from the line segment).
-		var epsilon = 0.000001;
+		var epsilon = 0.0000005;
 		// check if the point lies between any 2 of the consecutive mission points.
 		for (var i = 1; i < pointArray.length; i++) {
 			var crossProduct = (point[1] - pointArray[i-1][1]) * (pointArray[i][0] - pointArray[i-1][0]) - (point[0] - pointArray[i-1][0]) * (pointArray[i][1] - pointArray[i-1][1]);
