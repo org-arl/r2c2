@@ -389,7 +389,7 @@ class MapComponent extends React.Component {
 			})
 			return;
 		}
-
+		this.state.displayMissionPts = true;
 		var missionPointsArray = this.state.missions[num];
 		var currentMission = [];
 		for (var i=0; i < missionPointsArray.length; i++){
