@@ -3,7 +3,8 @@ import { Map as LeafletMap, Marker, Popup, TileLayer, Circle, Polygon, Polyline 
 
 import CursorPositionComponent from './CursorPositionComponent';
 
-import MissionPlanner from './MissionPlanner';
+import MissionTreeViewComponent from './MissionTreeViewComponent';
+import '../../assets/MissionPlanner.css';
 
 import CoordSys from '../../assets/CoordSys.js';
 
@@ -651,6 +652,9 @@ class MapComponent extends React.Component {
 		this.viewMission(this.state.missionNumber);
 	}
 
+	onMissionPtClick(i){
+		this.refs.missionTreeView.selectMleg(i+1);
+	}
 
 	toggleMissionPlanner(e) {
 		if (this.state.MissionPlannerEnabled) {
@@ -717,7 +721,7 @@ class MapComponent extends React.Component {
 					);
 				} else {
 					MissionPointsMarkers.push(
-						<Marker draggable={this.state.MissionPlannerEnabled} onDragEnd={this.dragEndMissionPointMarker} icon={mapPin} key={"MissionPT" + i} position={this.state.currentMission[i]}>
+						<Marker draggable={this.state.MissionPlannerEnabled} onClick={this.onMissionPtClick.bind(this,i)} onDragEnd={this.dragEndMissionPointMarker} icon={mapPin} key={"MissionPT" + i} position={this.state.currentMission[i]}>
 							<Popup>
 								Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)} <br/>
 								x: {x.toFixed(4)}, y: {y.toFixed(4)}
@@ -763,7 +767,7 @@ class MapComponent extends React.Component {
 
 		const MissionPlannerPanels = (this.state.MissionPlannerEnabled) ?
 		<Row>
-			<MissionPlanner selectMissionPointFunc={this.selectMissionPoint} viewMissionFunc={this.viewMission} missions={this.state.missions} editedMissions={this.state.editedMissions} management={this.management}/>
+			<MissionTreeViewComponent ref="missionTreeView" selectMissionPointFunc={this.selectMissionPoint} viewMissionFunc={this.viewMission} missions={this.state.missions} editedMissions={this.state.editedMissions} management={this.management}/>
 		</Row> :
 		null;
 

@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
 	}
 });
 
-class CursorPositionComponent extends React.Component {
+class MissionTreeViewComponent extends React.Component {
 	constructor(props, context) {
 		super(props, context);
 
@@ -210,4 +210,4 @@ class CursorPositionComponent extends React.Component {
 	}
 }
 
-export default CursorPositionComponent;
+export default MissionTreeViewComponent;
