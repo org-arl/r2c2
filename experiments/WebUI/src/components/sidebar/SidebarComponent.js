@@ -1,7 +1,6 @@
 import React from 'react';
 import { Row, Container, Button } from 'react-bootstrap';
 import { StyleSheet, css } from 'aphrodite';
-// import MenuItemComponent from './MenuItemComponent';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';

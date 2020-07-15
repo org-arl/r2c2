@@ -216,6 +216,7 @@ class MapComponent extends React.Component {
 					.then(vehicleId => {
 						console.log('vehicleId', vehicleId);
 						this.vehicleId = vehicleId;
+						document.title = vehicleId + " StarControl";
 					})
 					.catch(reason => {
 						console.log('could not get vehicle ID', reason);
@@ -494,6 +495,16 @@ class MapComponent extends React.Component {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
 		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1").focus();
+	}
+
+	closeAllChildWindows(){
+		var windowsArr = ["Dashboard", "Diagnostics", "Sentuators", "ScriptControl"];
+		windowsArr.forEach((tab) => {
+			const href = window.location.href;
+			const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
+			var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
+			w.close();
+		});
 	}
 
 	checkCollinear(pointArray, point) {
@@ -785,6 +796,9 @@ class MapComponent extends React.Component {
 								{missionList}
 							</div>
 						</div>
+
+						<Button type="submit" onClick={this.closeAllChildWindows}><FontAwesomeIcon icon={faWindowClose} title="Close all Child Windows"/></Button>
+
 						<Button type="submit" onClick={this.recentreMap}><FontAwesomeIcon icon={faCrosshairs}  title="Re-center Map"/></Button>
 						<Button type="submit" active={this.state.displayGeoFence} onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
 						<Button type="submit" active={this.state.displayMissionPts} onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>

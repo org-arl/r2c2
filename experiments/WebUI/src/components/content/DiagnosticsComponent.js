@@ -38,9 +38,18 @@ class DiagnosticsComponent extends React.Component {
 				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
 				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
 
-				const management = new Management(this.gateway);
+				this.management = new Management(this.gateway);
 
-				management.getHealth()
+				this.management.getVehicleId()
+					.then(vehicleId => {
+						console.log('vehicleId', vehicleId);
+						this.vehicleId = vehicleId;
+					})
+					.catch(reason => {
+						console.log('could not get vehicle ID', reason);
+					});
+
+				this.management.getHealth()
 				.then(response => {
 					// console.log(response);
 					this.setState({
@@ -66,7 +75,11 @@ class DiagnosticsComponent extends React.Component {
 	}
 
 	render() {
-		document.title = "Diagnostics";
+		if (this.vehicleId) {
+			document.title = this.vehicleId + " Diagnostics";
+		} else {
+			document.title = "Diagnostics";
+		}
 		// console.log(this.state.diagnostics);
 		var diagnosticsRows = [];
 		for (var i = 0; i < this.state.diagnostics.length; i++) {
