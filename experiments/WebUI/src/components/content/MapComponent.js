@@ -8,7 +8,7 @@ import MissionPlanner from './MissionPlanner';
 import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
-import { Management } from "../../assets/jc2.js";
+import { Management, TargetLocMT } from "../../assets/jc2.js";
 import { mapPin, mapPinSelected, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
 // import ManualCommands from '../../assets/ManualCommands.js';
 import ToolbarComponent from '../ToolbarComponent';
@@ -18,7 +18,7 @@ import { Row, Container, Dropdown, Button, DropdownButton } from 'react-bootstra
 import { StyleSheet, css } from 'aphrodite';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCrosshairs, faUndo, faSave, faWindowClose, faHome, faBan, faSatellite } from '@fortawesome/free-solid-svg-icons'
+import { faCrosshairs, faUndo, faSave, faWindowClose, faHome, faBan, faSatellite, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -151,8 +151,10 @@ class MapComponent extends React.Component {
 		this.enableDrawGeofence = this.enableDrawGeofence.bind(this);
 		this.undoGeoFencePoint = this.undoGeoFencePoint.bind(this);
 		this.saveNewGeoFence = this.saveNewGeoFence.bind(this);
+		this.clearNewGeoFence = this.clearNewGeoFence.bind(this);
 		this.cancelNewGeoFence = this.cancelNewGeoFence.bind(this);
 
+		this.checkCollinear = this.checkCollinear.bind(this);
 		this.mapOnRightClick = this.mapOnRightClick.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
 
@@ -299,6 +301,9 @@ class MapComponent extends React.Component {
 				positionError: this.state.positionError - 1
 			})},
 		200);
+
+		var x = new TargetLocMT();
+		console.log(x);
 	}
 
 	componentDidUpdate() {
@@ -385,7 +390,7 @@ class MapComponent extends React.Component {
 			})
 			return;
 		}
-
+		this.state.displayMissionPts = true;
 		var missionPointsArray = this.state.missions[num];
 		var currentMission = [];
 		for (var i=0; i < missionPointsArray.length; i++){
@@ -437,7 +442,8 @@ class MapComponent extends React.Component {
 	enableDrawGeofence(e){
 		if (!this.state.MissionPlannerEnabled) {
 			this.setState({
-				drawingGeoFence: true
+				drawingGeoFence: true,
+				drawGeoFence: this.state.geoFenceCoordinates
 			})
 		}
 	}
@@ -451,11 +457,22 @@ class MapComponent extends React.Component {
 	}
 
 	saveNewGeoFence(e){
-		// TODO: add code to save geofence on vehicle and replace current geofence.
+		console.log("Saving new geofence");
+		this.management.updateGeofence(this.state.drawGeoFence)
+		.then(response => {
+			this.setState({
+				drawingGeoFence: false,
+				geoFenceCoordinates: this.state.drawGeoFence,
+			});
+		})
+		.catch(reason => {
+			console.log('Could not update geofence ', reason);
+		});
 
+	}
+
+	clearNewGeoFence(e){
 		this.setState({
-			drawingGeoFence: false,
-			// geoFenceCoordinates: this.state.drawGeoFence,
 			drawGeoFence: []
 		});
 	}
@@ -476,23 +493,52 @@ class MapComponent extends React.Component {
 	openNewWindow(tab) {
 		const href = window.location.href;
 		const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
-		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
+		var w = window.open(url, tab, "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1").focus();
 	}
 
-	// executes on right click on map.
+	checkCollinear(pointArray, point) {
+		// epsilon accounts for the error in checking if a point is collinear. Larger epsilon will result in wider range of points getting accepted as collinear(even those that lie further from the line segment).
+		var epsilon = 0.0000005;
+		// check if the point lies between any 2 of the consecutive mission points.
+		for (var i = 1; i < pointArray.length; i++) {
+			var crossProduct = (point[1] - pointArray[i-1][1]) * (pointArray[i][0] - pointArray[i-1][0]) - (point[0] - pointArray[i-1][0]) * (pointArray[i][1] - pointArray[i-1][1]);
+			if(Math.abs(crossProduct) < epsilon){
+				var dotProduct = (point[0] - pointArray[i-1][0]) * (pointArray[i][0] - pointArray[i-1][0]) + (point[1] - pointArray[i-1][1])*(pointArray[i][1] - pointArray[i-1][1]);
+				if (dotProduct >= 0) {
+					var squaredLength = (pointArray[i][0] - pointArray[i-1][0])*(pointArray[i][0] - pointArray[i-1][0]) + (pointArray[i][1] - pointArray[i-1][1])*(pointArray[i][1] - pointArray[i-1][1]);
+					if (dotProduct <= squaredLength) {
+						return i; //returns index on first match
+					}
+				}
+			}
+		}
+		return -1; //if not collinear
+	}
+
 	mapOnRightClick(e) {
 		console.log(e.latlng);
 		if (this.state.drawingGeoFence) {
-
+			var index = this.checkCollinear(this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]);
+			var drawGeoFenceArr = this.state.drawGeoFence;
+			if (index === -1) {
+				console.log("Appending point at the end");
+				drawGeoFenceArr.push([e.latlng.lat, e.latlng.lng]);
+			} else {
+				console.log("Inserting point between collinear points");
+				drawGeoFenceArr.splice(index, 0, [e.latlng.lat, e.latlng.lng]);
+			}
+			// hack to redraw the geofence polygon.
 			this.setState({
-				drawGeoFence: [...this.state.drawGeoFence, [e.latlng.lat, e.latlng.lng]]
+				drawGeoFence: []
+			});
+			this.setState({
+				drawGeoFence: drawGeoFenceArr
 			});
 
 		} else if (this.state.MissionPlannerEnabled && this.state.missionNumber !== -1) {
 
-			this.setState({
-				currentMission: [...this.state.currentMission, [e.latlng.lat, e.latlng.lng]]
-			});
+			var index = this.checkCollinear(this.state.currentMission, [e.latlng.lat, e.latlng.lng]);
+			var currentMissionArr = this.state.currentMission;
 
 			var mission_task = new SimpleMT();
 			mission_task.mp.x = this.coordSys.long2locx(e.latlng.lng);
@@ -502,12 +548,24 @@ class MapComponent extends React.Component {
 
 			var missions = this.state.missions;
 			var editedMissions = this.state.editedMissions;
-			console.log(this.state.editedMissions);
-			missions[this.state.missionNumber].push(mission_task);
+
+			if (index === -1) {
+				console.log("Appending point at the end");
+				currentMissionArr.push([e.latlng.lat, e.latlng.lng]);
+				missions[this.state.missionNumber].push(mission_task);
+			} else {
+				console.log("Inserting point between collinear points");
+				currentMissionArr.splice(index, 0, [e.latlng.lat, e.latlng.lng]);
+				missions[this.state.missionNumber].splice(index, 0, mission_task);
+			}
+
+			// console.log(this.state.editedMissions);
+
 			editedMissions[this.state.missionNumber] = 1;
 			this.setState({
 				missions: missions,
-				editedMissions: editedMissions
+				editedMissions: editedMissions,
+				currentMission: currentMissionArr
 			});
 			console.log(this.state.missions);
 		}
@@ -535,9 +593,10 @@ class MapComponent extends React.Component {
 		for (var i = 0; i < drawGeoFenceArr.length; i++) {
 			if ( drawGeoFenceArr[i][0] === oldlat && drawGeoFenceArr[i][1] === oldlng ){
 				drawGeoFenceArr[i] = [newlat, newlng];
-				console.log("moved" + i);
+				console.log("moved " + i);
 			}
 		}
+		// hack to redraw the geofence polygon.
 		this.setState({
 			drawGeoFence: []
 		});
@@ -598,17 +657,17 @@ class MapComponent extends React.Component {
 
 	abortMission() {
 		console.log("Abort Mission!");
-		// this.management.abortMission();
+		this.management.abortMission();
 	}
 
 	stationKeep() {
 		console.log("Station Keep!");
-		// this.management.stationKeep();
+		this.management.stationKeep();
 	}
 
 	goHome() {
 		console.log("Go Home!");
-		// this.management.goHome();
+		this.management.abortToHome();
 	}
 
 	render() {
@@ -669,9 +728,10 @@ class MapComponent extends React.Component {
 		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"></Polyline> : null;
 
 		const drawGeoFenceOptions = (this.state.drawingGeoFence) ? <div className="drawGeoFence_content">
-			<Button type="submit" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
-			<Button type="submit" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
-			<Button type="submit" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+			<Button type="submit" title="Undo last point" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
+			<Button type="submit" title="Save Geofence" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
+			<Button type="submit" title="Cancel Geofence" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+			<Button type="submit" title="Clear Geofence" onClick={this.clearNewGeoFence}><FontAwesomeIcon icon={faTrashAlt} color="#fff" /></Button>
 		</div> : null;
 
 		const drawGeoFenceMarkers = [];

@@ -53,6 +53,7 @@ export class Management {
      * @param {int} missionNumber Mission number.
      */
     runMission(missionNumber) {
+		console.log(missionNumber);
         this.getVehicleId()
             .then(vehicleId => {
                 const request = new OperatorCmdReq({
@@ -61,6 +62,58 @@ export class Management {
                     vehicleID: vehicleId,
                     missionNumber: missionNumber,
                 });
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
+	/**
+     * Abort a mission.
+     *
+     */
+    abortMission() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'ABORT',
+                    vehicleID: vehicleId
+                });
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
+	/**
+     * Abort to home.
+     *
+     */
+    abortToHome() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'ABORT_TO_HOME',
+                    vehicleID: vehicleId
+                });
+                // NOTE: no response expected
+                this._gateway.send(request);
+            });
+    }
+
+	/**
+     * station keep.
+     *
+     */
+    stationKeep() {
+        this.getVehicleId()
+            .then(vehicleId => {
+                const request = new OperatorCmdReq({
+                    recipient: this._captainAgentId,
+                    cmd: 'STATIONKEEPING',
+                    vehicleID: vehicleId
+                });
+				console.log(request);
                 // NOTE: no response expected
                 this._gateway.send(request);
             });
@@ -83,6 +136,34 @@ export class Management {
                             console.log('getMissions', response);
                             if (response.perf === Performative.INFORM) {
                                 resolve(response.missions);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+	/**
+     * Updates a mission.
+     *
+     * @returns {Promise<Array>}
+     */
+    updateMission(updatedMission, missionNumber) {
+		console.log(updatedMission);
+		console.log(missionNumber);
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new UpdateMissionReq({
+                        recipient: this._managementAgentId,
+                        mission: updatedMission,
+                        missionNumber: missionNumber
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.perf);
                             } else {
                                 reject(response.perf);
                             }
@@ -143,6 +224,27 @@ export class Management {
                 return new Promise((resolve, reject) => {
                     const request = new GetGeofenceReq({
                         recipient: this._managementAgentId,
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.points);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+    updateGeofence(updatedGeofence) {
+		console.log(updatedGeofence);
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new UpdateGeofenceReq({
+                        recipient: this._managementAgentId,
+                        points: updatedGeofence
                     });
                     this._gateway.request(request)
                         .then(response => {
@@ -407,6 +509,17 @@ export class GetGeofenceReq extends AbstractRequest {
     }
 }
 
+export class UpdateGeofenceReq extends AbstractRequest {
+     /**
+     * Constructs an GetGeofenceReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.UpdateGeofenceReq', params);
+    }
+}
+
 export class GetHealthReq extends AbstractRequest {
 
     /**
@@ -512,5 +625,80 @@ export class GetMissionsReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.GetMissionsReq', params);
+    }
+}
+
+export class UpdateMissionReq extends AbstractRequest {
+
+    /**
+     * Constructs an UpdateMissionReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.UpdateMissionReq', params);
+    }
+}
+
+
+//*************** Classes for different Mission types ***************
+
+export class SimpleMT extends AbstractRequest {
+
+    /**
+     * Constructs an SimpleMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.SimpleMT', params);
+    }
+}
+
+export class LawnMowerMT extends AbstractRequest {
+
+    /**
+     * Constructs an LawnMowerMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.LawnMowerMT', params);
+    }
+}
+
+export class StationKeepingMT extends AbstractRequest {
+
+    /**
+     * Constructs an StationKeepingMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.StationKeepingMT', params);
+    }
+}
+
+export class SwanArmMT extends AbstractRequest {
+
+    /**
+     * Constructs an SwanArmMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.SwanArmMT', params);
+    }
+}
+
+export class TargetLocMT extends AbstractRequest {
+
+    /**
+     * Constructs an TargetLocMT mission task.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.mtt.TargetLocMT', params);
     }
 }
