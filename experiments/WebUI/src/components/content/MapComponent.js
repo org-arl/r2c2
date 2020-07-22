@@ -9,7 +9,7 @@ import '../../assets/MissionPlanner.css';
 import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
-import { Management, TargetLocMT } from "../../assets/jc2.js";
+import { Management } from "../../assets/jc2.js";
 import { mapPin, mapPinSelected, readyMarker, notReadyMarker } from "../../assets/MapIcons.js";
 // import ManualCommands from '../../assets/ManualCommands.js';
 import ToolbarComponent from '../ToolbarComponent';
@@ -66,18 +66,64 @@ function MissionTask() {
 	this.payload = {};
 }
 
+function BioCastMT() {
+	this.taskID = "BioCastMT";
+	this.SourceSLevel = 0.0;
+	this.mtTime = 0;
+	this.resamplingTime = 0;
+	this.sourceX = 0.0;
+	this.sourceY = 0.0;
+	MissionTask.call(this);
+}
+
+function CoopPosMT() {
+	this.taskID = "CoopPosMT";
+	this.lookAheadLevel = [];
+	this.missionNum = [];
+	this.numOfSurveyAuv = 0;
+	this.posInterval = [];
+	this.vehicleID = [];
+	MissionTask.call(this);
+}
+
+function LawnMowerMT() {
+	this.taskID = "LawnMoverMT";
+	this.xLength = 0.0;
+	this.yLength = 0.0;
+	this.moweWidth = 0.0;
+	this.moweBearing = 0.0;
+	MissionTask.call(this);
+}
+
 function SimpleMT() {
 	this.taskID = "SimpleMT";
 	this.endHeading = 0.0;
 	MissionTask.call(this);
 }
 
-function LawnMoverMT() {
-	this.taskID = "LawnMoverMT";
-	this.xLength = 0.0;
-	this.yLength = 0.0;
-	this.moweWidth = 0.0;
-	this.moweBearing = 0.0;
+function StationKeepingMT() {
+	this.taskID = "StationKeepingMT";
+	this.duration = 0.0;
+	MissionTask.call(this);
+}
+
+function SwanArmMT() {
+	this.taskID = "SwanArmMT";
+	this.armDepth = {};
+	this.missionTaskTimeout = {};
+	this.reposeBehavior = {};
+	MissionTask.call(this);
+}
+
+function TargetLocMT() {
+	this.taskID = "TargetLocMT";
+	this.mtTimeOut = 0;
+	MissionTask.call(this);
+}
+
+function WaterSampleMT() {
+	this.taskID = "WaterSampleMT";
+	this.armDepth = 0.0;
 	MissionTask.call(this);
 }
 
@@ -173,6 +219,8 @@ class MapComponent extends React.Component {
 		this.abortMission = this.abortMission.bind(this);
 		this.stationKeep = this.stationKeep.bind(this);
 		this.goHome = this.goHome.bind(this);
+
+		this.changeMissionType = this.changeMissionType.bind(this);
 	}
 
 	componentDidMount() {
@@ -303,9 +351,6 @@ class MapComponent extends React.Component {
 				positionError: this.state.positionError - 1
 			})},
 		200);
-
-		var x = new TargetLocMT();
-		console.log(x);
 	}
 
 	componentDidUpdate() {
@@ -596,7 +641,6 @@ class MapComponent extends React.Component {
 	}
 
 	dragEndGeoFenceMarker(e) {
-		// console.log(e);
 		var newlat = e.target._latlng.lat;
 		var newlng = e.target._latlng.lng;
 		var oldlat = e.target.options.position[0];
@@ -685,6 +729,46 @@ class MapComponent extends React.Component {
 		this.management.abortToHome();
 	}
 
+	changeMissionType(missionLegIndex, newType) {
+		var currentMissionArr = this.state.currentMission;
+
+		var constructorName = newType + "()";
+		// var mission_task = new window[constructorName]();
+		var mission_task;
+		if (newType === "BioCastMT") {
+			mission_task = new BioCastMT();
+		} else if (newType === "CoopPosMT") {
+			mission_task = new CoopPosMT();
+		} else if (newType === "LawnMowerMT") {
+			mission_task = new LawnMowerMT();
+		} else if (newType === "StationKeepingMT") {
+			mission_task = new StationKeepingMT();
+		} else if (newType === "SwanArmMT") {
+ 			mission_task = new SwanArmMT();
+ 		} else if (newType === "TargetLocMT") {
+			mission_task = new TargetLocMT();
+		} else if (newType === "WaterSampleMT") {
+			mission_task = new WaterSampleMT();
+		} else {
+			mission_task = new SimpleMT();
+		}
+
+		var missions = this.state.missions;
+		console.log(mission_task);
+		var oldMissionTask = missions[this.state.missionNumber][missionLegIndex - 1];
+		console.log(oldMissionTask);
+
+		mission_task.mp = oldMissionTask.mp;
+		mission_task.payload = oldMissionTask.payload;
+
+
+		missions[this.state.missionNumber][missionLegIndex - 1] = mission_task;
+
+		this.setState({
+			missions: missions
+		});
+	}
+
 	render() {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
 		const mapCenter = [this.state.mapCenter.latitude, this.state.mapCenter.longitude];
@@ -767,7 +851,7 @@ class MapComponent extends React.Component {
 
 		const MissionPlannerPanels = (this.state.MissionPlannerEnabled) ?
 		<Row>
-			<MissionTreeViewComponent ref="missionTreeView" selectMissionPointFunc={this.selectMissionPoint} viewMissionFunc={this.viewMission} missions={this.state.missions} editedMissions={this.state.editedMissions} management={this.management}/>
+			<MissionTreeViewComponent ref="missionTreeView" selectMissionPointFunc={this.selectMissionPoint} viewMissionFunc={this.viewMission} changeMissionType={this.changeMissionType} missions={this.state.missions} editedMissions={this.state.editedMissions} management={this.management}/>
 		</Row> :
 		null;
 
