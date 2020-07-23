@@ -53,7 +53,6 @@ export class Management {
      * @param {int} missionNumber Mission number.
      */
     runMission(missionNumber) {
-		console.log(missionNumber);
         this.getVehicleId()
             .then(vehicleId => {
                 const request = new OperatorCmdReq({
@@ -113,7 +112,6 @@ export class Management {
                     cmd: 'STATIONKEEPING',
                     vehicleID: vehicleId
                 });
-				console.log(request);
                 // NOTE: no response expected
                 this._gateway.send(request);
             });
@@ -133,7 +131,6 @@ export class Management {
                     });
                     this._gateway.request(request)
                         .then(response => {
-                            console.log('getMissions', response);
                             if (response.perf === Performative.INFORM) {
                                 resolve(response.missions);
                             } else {
@@ -150,8 +147,6 @@ export class Management {
      * @returns {Promise<Array>}
      */
     updateMission(updatedMission, missionNumber) {
-		console.log(updatedMission);
-		console.log(missionNumber);
         return this._waitForReady()
             .then(management => {
                 return new Promise((resolve, reject) => {
@@ -238,7 +233,6 @@ export class Management {
     }
 
     updateGeofence(updatedGeofence) {
-		console.log(updatedGeofence);
         return this._waitForReady()
             .then(management => {
                 return new Promise((resolve, reject) => {
