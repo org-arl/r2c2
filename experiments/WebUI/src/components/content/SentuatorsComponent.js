@@ -29,6 +29,15 @@ class SentuatorsComponent extends React.Component {
 			if (connected) {
 				this.management = new Management(this.gateway);
 
+				this.management.getVehicleId()
+					.then(vehicleId => {
+						console.log('vehicleId', vehicleId);
+						this.vehicleId = vehicleId;
+					})
+					.catch(reason => {
+						console.log('could not get vehicle ID', reason);
+					});
+
 				this.management.getSentuators()
 				.then(response => {
 					// console.log(response);
@@ -88,7 +97,11 @@ class SentuatorsComponent extends React.Component {
 	}
 
 	render() {
-		document.title = "Sentuators";
+		if (this.vehicleId) {
+			document.title = this.vehicleId + " Sentuators";
+		} else {
+			document.title = "Sentuators";
+		}
 		var selectOptions = [];
 
 		const tick = <FontAwesomeIcon icon={faCheck} color="green" />;

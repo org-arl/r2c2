@@ -8,6 +8,7 @@ import D3BearingComponent from './D3BearingComponent';
 
 import {FjageHelper} from "../../assets/fjageHelper.js";
 import {Message, Performative} from '../../assets/fjage.js';
+import { Management} from "../../assets/jc2.js";
 
 import FrontIcon from '../../assets/img/submarine-front-view.svg';
 import SideIcon from '../../assets/img/submarine-side-view.svg';
@@ -135,6 +136,16 @@ class GaugeDashboard extends React.Component {
                         console.log(msg);
                     }
                 });
+
+				this.management = new Management(this.gateway);
+				this.management.getVehicleId()
+					.then(vehicleId => {
+						console.log('vehicleId', vehicleId);
+						this.vehicleId = vehicleId;
+					})
+					.catch(reason => {
+						console.log('could not get vehicle ID', reason);
+					});
             }
         });
     }
@@ -149,7 +160,11 @@ class GaugeDashboard extends React.Component {
     }
 
     render() {
-		document.title = "Dashboard";
+		if (this.vehicleId) {
+			document.title = this.vehicleId + " Dashboard";
+		} else {
+			document.title = "Dashboard";
+		}
         const gaugeContainerStyle = {
             padding: "10px",
 			margin: "5px",

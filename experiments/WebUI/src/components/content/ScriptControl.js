@@ -76,6 +76,15 @@ class ScriptControl extends React.Component {
 
 				this.management = new Management(this.gateway);
 
+				this.management.getVehicleId()
+					.then(vehicleId => {
+						console.log('vehicleId', vehicleId);
+						this.vehicleId = vehicleId;
+					})
+					.catch(reason => {
+						console.log('could not get vehicle ID', reason);
+					});
+
 				this.management.getScript()
 				.then(script => {
 					// console.log('script', script);
@@ -194,8 +203,11 @@ class ScriptControl extends React.Component {
 	}
 
 	render() {
-		document.title = "Script Control";
-
+		if (this.vehicleId) {
+			document.title = this.vehicleId + " Script Control";
+		} else {
+			document.title = "Script Control";
+		}
 		var subroutines = this.getSubroutines();
 		var subroutineOptions = [];
 		subroutines.forEach((subroutine, i) => {

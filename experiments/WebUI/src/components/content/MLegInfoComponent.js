@@ -1,7 +1,17 @@
 import React from 'react';
 import { StyleSheet, css } from 'aphrodite';
-import { Table, ListGroup, Tab, FormControl, Button } from 'react-bootstrap';
+import { Table, ListGroup, Tab, FormControl, Button, Form } from 'react-bootstrap';
 
+const MissionTypes = [
+	"BioCastMT",
+	"CoopPosMT",
+	"LawnMowerMT",
+	"SimpleMT",
+	"StationKeepingMT",
+	"SwanArmMT",
+	"TargetLocMT",
+	"WaterSampleMT",
+];
 
 const styles = StyleSheet.create({
 	MLegInfoContainer: {
@@ -76,32 +86,45 @@ class MLegInfoComponent extends React.Component {
 		this.modifyEditedMissionsArr();
 	}
 
+	onMissionTaskEdit(e) {
+		var missionLeg = this.state.missionLeg;
+		this.state.missionLeg[e.target.name] = e.target.value;
+		this.setState({
+			missionLeg: missionLeg
+		});
+		this.modifyEditedMissionsArr();
+	}
+
+	onMissionTypeChange(e) {
+		// console.log(e.target.value);
+		this.props.changeMissionType(e.target.value);
+		this.modifyEditedMissionsArr();
+	}
+
 	render() {
 		var propertyTableRows = [];
 		var paramTableRows = [];
 		var payloadObject = {};
+		var missionTaskTableRows = [];
+
 		// var actionButtons = null;
 		if (this.state.missionLeg !== null) {
 
 			//Property table - TODO currently hard coded, find better way to do this.
-			propertyTableRows.push(
-				<tr>
-					<td>x</td>
-					<td><FormControl name="x" onChange={(e) => this.onPropertyChange(e)} value={this.state.missionLeg.mp.x}></FormControl></td>
-				</tr>
-			);
-			propertyTableRows.push(
-				<tr>
-					<td>y</td>
-					<td><FormControl name="y" onChange={(e) => this.onPropertyChange(e)} value={this.state.missionLeg.mp.y}></FormControl></td>
-				</tr>
-			);
-			propertyTableRows.push(
-				<tr>
-					<td>z</td>
-					<td><FormControl name="z" onChange={(e) => this.onPropertyChange(e)} value={this.state.missionLeg.mp.z}></FormControl></td>
-				</tr>
-			);
+
+			var missionPoint = this.state.missionLeg.mp;
+			for (var key in missionPoint) {
+				if (missionPoint.hasOwnProperty(key)) {
+					if (key === "x" || key === "y" || key === "z") {
+						propertyTableRows.push(
+							<tr>
+								<td>{key}</td>
+								<td><FormControl name={key} onChange={(e) => this.onPropertyChange(e)} value={this.state.missionLeg.mp[key]}></FormControl></td>
+							</tr>
+						);
+					}
+				}
+			}
 
 			// console.log(this.state.missionLeg);
 			var params = this.state.missionLeg.mp.params;
@@ -118,6 +141,41 @@ class MLegInfoComponent extends React.Component {
 			}
 
 			payloadObject = this.state.missionLeg.payload;
+			var MissionTypeOptions = [];
+
+			var missionTaskObject = this.state.missionLeg;
+			var selectedType = missionTaskObject.taskID.substring(0, missionTaskObject.taskID.indexOf("MT") + 2);
+			MissionTypes.forEach((missionType) => {
+				if (missionType === selectedType) {
+					MissionTypeOptions.push(<option selected>{missionType}</option>);
+				} else {
+					MissionTypeOptions.push(<option>{missionType}</option>);
+				}
+			});
+
+			for (var key in missionTaskObject) {
+				if (missionTaskObject.hasOwnProperty(key)) {
+					if (key == "taskID") {
+						missionTaskTableRows.push(
+							<tr>
+								<td>Task Type</td>
+								<td>
+									<Form.Control as="select" onChange={(e) => this.onMissionTypeChange(e)}>
+										{MissionTypeOptions}
+									</Form.Control>
+								</td>
+							</tr>
+						);
+					} else if (key !== "mp" && key !== "payload") {
+						missionTaskTableRows.push(
+							<tr>
+								<td>{key}</td>
+								<td><FormControl name={key} onChange={(e) => this.onMissionTaskEdit(e)} value={this.state.missionLeg[key]}></FormControl></td>
+							</tr>
+						);
+					}
+				}
+			}
 		}
 
 		const Properties =
@@ -150,6 +208,19 @@ class MLegInfoComponent extends React.Component {
 			<div>
 				<FormControl onChange={(e) => this.onPayloadChange(e)} value={JSON.stringify(payloadObject, null, 0)}></FormControl>
 			</div>;
+
+		const MissionTask = <Table striped bordered hover>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Value</th>
+				</tr>
+			</thead>
+			<tbody>
+				{missionTaskTableRows}
+			</tbody>
+		</Table>;
+
 		return (
 			<div className={css(styles.MLegInfoContainer)}>
 				<Tab.Container id="list-group-tabs-example" defaultActiveKey="#Parameters">
@@ -157,6 +228,7 @@ class MLegInfoComponent extends React.Component {
 						<ListGroup.Item action href="#Property">Property</ListGroup.Item>
 						<ListGroup.Item action href="#Parameters">Parameters</ListGroup.Item>
 						<ListGroup.Item action href="#Payload">Payload</ListGroup.Item>
+						<ListGroup.Item action href="#MissionTask">Mission Task</ListGroup.Item>
 					</ListGroup>
 
 					<Tab.Content>
@@ -168,6 +240,9 @@ class MLegInfoComponent extends React.Component {
 						</Tab.Pane>
 						<Tab.Pane eventKey="#Payload">
 							{Payload}
+						</Tab.Pane>
+						<Tab.Pane eventKey="#MissionTask">
+							{MissionTask}
 						</Tab.Pane>
 					</Tab.Content>
 				</Tab.Container>

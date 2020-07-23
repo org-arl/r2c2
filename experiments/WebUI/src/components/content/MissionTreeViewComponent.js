@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
 	}
 });
 
-class CursorPositionComponent extends React.Component {
+class MissionTreeViewComponent extends React.Component {
 	constructor(props, context) {
 		super(props, context);
 
@@ -33,6 +33,8 @@ class CursorPositionComponent extends React.Component {
 			selectedMission: 0,
 			selectedMLeg: 0
 		}
+
+		this.changeMissionType = this.changeMissionType.bind(this);
 
 	}
 
@@ -55,6 +57,7 @@ class CursorPositionComponent extends React.Component {
 	}
 
 	selectMleg(index) {
+		// console.log(index);
 		this.setState({
 			selectedMLeg: index
 		});
@@ -148,6 +151,10 @@ class CursorPositionComponent extends React.Component {
 		this.props.viewMissionFunc(missionNumber);
 	}
 
+	changeMissionType(newType){
+		this.props.changeMissionType(this.state.selectedMLeg, newType);
+	}
+
 	render() {
 
 		var missionList = [];
@@ -161,8 +168,8 @@ class CursorPositionComponent extends React.Component {
 				mission.forEach((missionLeg, j) => {
 					var activeMleg = (this.state.selectedMLeg == j+1) ? "active" : "" ;
 					missionLegList.push(
-						<ListGroup.Item action className={activeMleg}>
-							<span onClick={() => this.selectMleg(j+1)}>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x.toFixed(2)}, {missionLeg.mp.y.toFixed(2)}, {missionLeg.mp.z.toFixed(2)}</span>
+						<ListGroup.Item action className={activeMleg} onClick={() => this.selectMleg(j+1)}>
+							<span>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x.toFixed(2)}, {missionLeg.mp.y.toFixed(2)}, {missionLeg.mp.z.toFixed(2)}</span>
 							<FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMissionPt(i,j)} title="Delete Mission Point"/>
 						</ListGroup.Item>
 					);
@@ -204,10 +211,10 @@ class CursorPositionComponent extends React.Component {
 						{missionList}
 					</ul>
 				</div>
-				<MLegInfoComponent refreshMissionMarkersFunc={this.props.viewMissionFunc} missionIndex={this.state.selectedMission} missionLeg={missionLeg} editedMissions={this.state.editedMissions}/>
+				<MLegInfoComponent changeMissionType={this.changeMissionType} refreshMissionMarkersFunc={this.props.viewMissionFunc} missionIndex={this.state.selectedMission} missionLeg={missionLeg} editedMissions={this.state.editedMissions}/>
 			</div>
 		);
 	}
 }
 
-export default CursorPositionComponent;
+export default MissionTreeViewComponent;
