@@ -1,255 +1,302 @@
-import React from 'react';
-import { StyleSheet, css } from 'aphrodite';
-import { Table, ListGroup, Tab, FormControl, Button, Form } from 'react-bootstrap';
-
-const MissionTypes = [
-	"BioCastMT",
-	"CoopPosMT",
-	"LawnMowerMT",
-	"SimpleMT",
-	"StationKeepingMT",
-	"SwanArmMT",
-	"TargetLocMT",
-	"WaterSampleMT",
-];
+import React, {Fragment} from 'react';
+import {css, StyleSheet} from 'aphrodite';
+import {Form, FormControl, ListGroup, Tab, Table} from 'react-bootstrap';
+import StarfishMissions, {TYPES} from "../../lib/StarfishMissions";
 
 const styles = StyleSheet.create({
-	MLegInfoContainer: {
-		position: "fixed",
-		// bottom: "0px",
+    MLegInfoContainer: {
+        position: "fixed",
+        // bottom: "0px",
 
-		right: "0px",
-		backgroundColor: "#fff",
-		padding: "5px",
-		fontSize: "0.9em"
-	}
+        right: "0px",
+        backgroundColor: "#fff",
+        padding: "5px",
+        fontSize: "0.9em"
+    }
 });
 
-class MLegInfoComponent extends React.Component {
-	constructor(props, context) {
-		super(props, context);
+/*
+ * properties: missionLeg
+ */
+class MLegInfoComponent
+    extends React.Component {
 
-		this.state = {
-			missionLeg: this.props.missionLeg,
-			editedMissions: this.props.editedMissions
-		}
-	}
+    constructor(props, context) {
+        super(props, context);
 
-	componentDidUpdate(prevProps) {
-		if (prevProps.missionLeg !== this.props.missionLeg) {
+        this.state = {
+            missionLeg: this.props.missionLeg,
+        }
+    }
 
-			this.setState({
-				missionLeg: this.props.missionLeg,
-			});
-		}
-	}
+    // ---- React.Component ----
 
-	modifyEditedMissionsArr(){
-		var editedMissions = this.state.editedMissions;
-		editedMissions[this.props.missionIndex - 1] = 1;
-		this.setState({
-			editedMissions: editedMissions
-		});
-	}
+    componentDidMount() {
+        this._initializeForm(this.props.missionLeg);
+    }
 
-	onPropertyChange(e) {
-		var missionLeg = this.state.missionLeg;
-		// console.log(e.target.value);
-		var value = e.target.value;
-		if (value === "") {
-			value = 0;
-		}
-		missionLeg.mp[e.target.name] = parseFloat(value);
-		this.setState({
-			missionLeg: missionLeg
-		});
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevProps.missionLeg !== this.props.missionLeg) {
+            this.setState({
+                missionLeg: this.props.missionLeg,
+            });
+            this._initializeForm(this.props.missionLeg);
+        }
+    }
 
-		this.modifyEditedMissionsArr();
-		this.props.refreshMissionMarkersFunc(this.props.missionIndex-1);
-	}
+    render() {
+        const form = this.state.form;
+        if (!form) {
+            return null;
+        }
 
-	onParamChange(e) {
-		var missionLeg = this.state.missionLeg;
-		missionLeg.mp.params[e.target.name] = e.target.value;
-		this.setState({
-			missionLeg: missionLeg
-		});
-		this.modifyEditedMissionsArr();
-	}
+        return (
+            <div className={css(styles.MLegInfoContainer)}>
+                <Tab.Container id="list-group-tabs-example" defaultActiveKey="#Properties">
+                    <ListGroup horizontal>
+                        <ListGroup.Item action href="#Properties">Properties</ListGroup.Item>
+                        <ListGroup.Item action href="#Parameters">Parameters</ListGroup.Item>
+                        <ListGroup.Item action href="#Payloads">Payloads</ListGroup.Item>
+                        <ListGroup.Item action href="#Position">Position</ListGroup.Item>
+                    </ListGroup>
 
-	onPayloadChange(e) {
-		var missionLeg = this.state.missionLeg;
-		missionLeg.payload = e.target.value;
-		this.setState({
-			missionLeg: missionLeg
-		});
-		this.modifyEditedMissionsArr();
-	}
+                    <Tab.Content>
+                        <Tab.Pane eventKey="#Properties">
+                            <Table striped bordered hover>
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Value</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr key="task.type">
+                                    <td>type</td>
+                                    <td>
+                                        <Form.Control name="type"
+                                                      as="select"
+                                                      value={form.type}
+                                                      onChange={(e) => this._onTypeChange(e)}>
+                                            {StarfishMissions.getMissionTasks().map((taskDefinition, index) => {
+                                                return (
+                                                    <option key={index}>{taskDefinition.name}</option>
+                                                );
+                                            })}
+                                        </Form.Control>
+                                    </td>
+                                </tr>
+                                {this._createTableRows(form.properties, (e) => this._onPropertyChange(e))}
+                                </tbody>
+                            </Table>
+                        </Tab.Pane>
+                        <Tab.Pane eventKey="#Parameters">
+                            {this._createTable(form.parameters, (e) => this._onParameterChange(e))}
+                        </Tab.Pane>
+                        <Tab.Pane eventKey="#Payloads">
+                            {this._createTable(form.payloads, (e) => this._onPayloadChange(e))}
+                        </Tab.Pane>
+                        <Tab.Pane eventKey="#Position">
+                            {this._createTable(form.position, (e) => this._onPositionChange(e))}
+                        </Tab.Pane>
+                    </Tab.Content>
+                </Tab.Container>
+            </div>
+        );
+    }
 
-	onMissionTaskEdit(e) {
-		var missionLeg = this.state.missionLeg;
-		this.state.missionLeg[e.target.name] = e.target.value;
-		this.setState({
-			missionLeg: missionLeg
-		});
-		this.modifyEditedMissionsArr();
-	}
+    // ---- initialization ----
 
-	onMissionTypeChange(e) {
-		// console.log(e.target.value);
-		this.props.changeMissionType(e.target.value);
-		this.modifyEditedMissionsArr();
-	}
+    _initializeForm(task) {
+        if (task === null) {
+            this.setState({
+                form: null,
+            });
+            return;
+        }
 
-	render() {
-		var propertyTableRows = [];
-		var paramTableRows = [];
-		var payloadObject = {};
-		var missionTaskTableRows = [];
+        const taskDefinition = StarfishMissions.getMissionTaskByType(task.type);
 
-		// var actionButtons = null;
-		if (this.state.missionLeg !== null) {
+        const form = {
+            type: null,
+            properties: {},
+            parameters: {},
+            payloads: {},
+            position: {
+                x: {
+                    type: TYPES.FLOAT,
+                    value: task.position.x,
+                },
+                y: {
+                    type: TYPES.FLOAT,
+                    value: task.position.y,
+                },
+                z: {
+                    type: TYPES.FLOAT,
+                    value: task.position.z,
+                },
+            },
+        };
 
-			//Property table - TODO currently hard coded, find better way to do this.
+        if (taskDefinition !== null) {
+            form.type = taskDefinition.name;
+            taskDefinition.props.forEach((prop) => {
+                const value = ('properties' in task) && (prop.name in task.properties)
+                    ? task.properties[prop.name] : '';
+                form.properties[prop.name] = {
+                    type: prop.type,
+                    value: value,
+                }
+            });
+        }
+        StarfishMissions.getParameters().forEach((parameter) => {
+            const value = ('parameters' in task) && (parameter.name in task.parameters)
+                ? task.parameters[parameter.name] : '';
+            form.parameters[parameter.name] = {
+                type: parameter.type,
+                value: value,
+            };
+        });
+        StarfishMissions.getPayloads().forEach((payload) => {
+            const value = ('payloads' in task) && (payload in task.payloads)
+                ? task.payloads[payload] : '';
+            form.payloads[payload] = {
+                type: TYPES.INT,
+                value: value,
+            };
+        });
+        this.setState({
+            form: form,
+        });
+    }
 
-			var missionPoint = this.state.missionLeg.mp;
-			for (var key in missionPoint) {
-				if (missionPoint.hasOwnProperty(key)) {
-					if (key === "x" || key === "y" || key === "z") {
-						propertyTableRows.push(
-							<tr>
-								<td>{key}</td>
-								<td><FormControl name={key} onChange={(e) => this.onPropertyChange(e)} value={this.state.missionLeg.mp[key]}></FormControl></td>
-							</tr>
-						);
-					}
-				}
-			}
+    // ---- event handlers ----
 
-			// console.log(this.state.missionLeg);
-			var params = this.state.missionLeg.mp.params;
-			for (var key in params) {
-				if (params.hasOwnProperty(key)) {
-					paramTableRows.push
-					(
-						<tr key={key}>
-							<td>{key}</td>
-							<td><FormControl name={key} onChange={(e) => this.onParamChange(e)} value={params[key]}></FormControl></td>
-						</tr>
-					);
-				}
-			}
+    _onTypeChange(e) {
+        const taskDefinition = StarfishMissions.getMissionTaskByName(e.target.value);
+        if (taskDefinition === null) {
+            return;
+        }
+        const task = this.props.missionLeg;
+        task.type = taskDefinition.type;
+        this._initializeForm(task);
+    }
 
-			payloadObject = this.state.missionLeg.payload;
-			var MissionTypeOptions = [];
+    _onPropertyChange(e) {
+        this._handleEvent('properties', e);
+    }
 
-			var missionTaskObject = this.state.missionLeg;
-			var selectedType = missionTaskObject.taskID.substring(0, missionTaskObject.taskID.indexOf("MT") + 2);
-			MissionTypes.forEach((missionType) => {
-				if (missionType === selectedType) {
-					MissionTypeOptions.push(<option selected>{missionType}</option>);
-				} else {
-					MissionTypeOptions.push(<option>{missionType}</option>);
-				}
-			});
+    _onParameterChange(e) {
+        this._handleEvent('parameters', e);
+    }
 
-			for (var key in missionTaskObject) {
-				if (missionTaskObject.hasOwnProperty(key)) {
-					if (key == "taskID") {
-						missionTaskTableRows.push(
-							<tr>
-								<td>Task Type</td>
-								<td>
-									<Form.Control as="select" onChange={(e) => this.onMissionTypeChange(e)}>
-										{MissionTypeOptions}
-									</Form.Control>
-								</td>
-							</tr>
-						);
-					} else if (key !== "mp" && key !== "payload") {
-						missionTaskTableRows.push(
-							<tr>
-								<td>{key}</td>
-								<td><FormControl name={key} onChange={(e) => this.onMissionTaskEdit(e)} value={this.state.missionLeg[key]}></FormControl></td>
-							</tr>
-						);
-					}
-				}
-			}
-		}
+    _onPayloadChange(e) {
+        this._handleEvent('payloads', e);
+    }
 
-		const Properties =
-			<Table striped bordered hover>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Value</th>
-					</tr>
-				</thead>
-				<tbody>
-					{propertyTableRows}
-				</tbody>
-			</Table>;
+    _onPositionChange(e) {
+        this._handleEvent('position', e);
+    }
 
-		const Parameters =
-			<Table striped bordered hover>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Value</th>
-					</tr>
-				</thead>
-				<tbody>
-					{paramTableRows}
-				</tbody>
-			</Table>;
+    _handleEvent(type, e) {
+        if (((e.type === 'keyup') && (e.keyCode === 13)) || (e.type === 'blur')) {
+            const name = e.target.name;
+            const rawValue = e.target.value;
+            const field = this.state.form[type][name];
+            const value = this._parseValue(field.type, rawValue);
+            field.value = (value !== null) ? value : '';
+            this.setState({
+                form: this.state.form,
+            });
+            const task = this.props.missionLeg;
+            task[type][name] = value;
+            if (this.props.onChange) {
+                this.props.onChange(task);
+            }
+        } else if (e.type === 'change') {
+            const name = e.target.name;
+            const value = e.target.value;
+            const field = this.state.form[type][name];
+            field.value = value;
+            this.setState({
+                form: this.state.form,
+            });
+        }
+    }
 
-		const Payload =
-			<div>
-				<FormControl onChange={(e) => this.onPayloadChange(e)} value={JSON.stringify(payloadObject, null, 0)}></FormControl>
-			</div>;
+    _parseValue(type, rawValue) {
+        if (type === TYPES.FLOAT) {
+            const value = parseFloat(rawValue);
+            if (isNaN(value)) {
+                return null;
+            }
+            return value;
+        } else if (type === TYPES.INT) {
+            const value = parseInt(rawValue);
+            if (isNaN(value)) {
+                return null;
+            }
+            return value;
+        } else if (type === TYPES.BOOLEAN) {
+            return rawValue;
+        } else if (type === TYPES.STRING) {
+            return rawValue;
+        } else {
+            return rawValue;
+        }
+    }
 
-		const MissionTask = <Table striped bordered hover>
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Value</th>
-				</tr>
-			</thead>
-			<tbody>
-				{missionTaskTableRows}
-			</tbody>
-		</Table>;
+    // ---- ui ----
 
-		return (
-			<div className={css(styles.MLegInfoContainer)}>
-				<Tab.Container id="list-group-tabs-example" defaultActiveKey="#Parameters">
-					<ListGroup horizontal>
-						<ListGroup.Item action href="#Property">Property</ListGroup.Item>
-						<ListGroup.Item action href="#Parameters">Parameters</ListGroup.Item>
-						<ListGroup.Item action href="#Payload">Payload</ListGroup.Item>
-						<ListGroup.Item action href="#MissionTask">Mission Task</ListGroup.Item>
-					</ListGroup>
+    _createTable(o, changeFunction) {
+        return (
+            <Table striped bordered hover>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                {o && this._createTableRows(o, changeFunction)}
+                </tbody>
+            </Table>
+        );
+    }
 
-					<Tab.Content>
-						<Tab.Pane eventKey="#Property">
-							{Properties}
-						</Tab.Pane>
-						<Tab.Pane eventKey="#Parameters">
-							{Parameters}
-						</Tab.Pane>
-						<Tab.Pane eventKey="#Payload">
-							{Payload}
-						</Tab.Pane>
-						<Tab.Pane eventKey="#MissionTask">
-							{MissionTask}
-						</Tab.Pane>
-					</Tab.Content>
-				</Tab.Container>
-				{/* {actionButtons} */}
-			</div>
-		);
-	}
+    _createTableRows(o, changeFunction) {
+        if (!o) {
+            return <Fragment/>;
+        }
+        const keys = this._getKeys(o);
+        return (
+            <Fragment>
+                {keys.map((key, index) => {
+                    return (
+                        <tr key={index}>
+                            <td>{key}</td>
+                            <td>
+                                <FormControl name={key} value={o[key].value}
+                                             onChange={changeFunction}
+                                             onBlur={changeFunction}
+                                             onKeyUp={changeFunction}/>
+                            </td>
+                        </tr>
+                    );
+                })}
+            </Fragment>
+        );
+    }
+
+    _getKeys(o) {
+        const keys = [];
+        for (let key in o) {
+            if (o.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        keys.sort();
+        return keys;
+    }
 }
 
 export default MLegInfoComponent;

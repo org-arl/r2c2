@@ -1,220 +1,316 @@
 import React from 'react';
-import { StyleSheet, css } from 'aphrodite';
-import { ListGroup } from 'react-bootstrap';
+import {css, StyleSheet} from 'aphrodite';
+import {Button, ListGroup, Modal} from 'react-bootstrap';
 
 import MLegInfoComponent from './MLegInfoComponent';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashAlt, faTimes, faSave } from '@fortawesome/free-solid-svg-icons'
-
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
+import MissionViewComponent from "./MissionViewComponent";
+import MissionPlannerContext from "./MissionPlanner";
 
 const styles = StyleSheet.create({
-	missionsContainer: {
-		position: "fixed",
-		height: "50%",
-		width: "300px",
-		overflowY: "scroll",
-		// top: "0px",
-		// marginTop: "30px",
-		left: "0px",
-		backgroundColor: "#fff",
-		padding: "5px",
-		fontSize: "0.9em"
-	}
+    missionsContainer: {
+        position: "fixed",
+        height: "50%",
+        width: "300px",
+        overflowY: "scroll",
+        // top: "0px",
+        // marginTop: "30px",
+        left: "0px",
+        backgroundColor: "#fff",
+        padding: "5px",
+        fontSize: "0.9em"
+    }
 });
 
-class MissionTreeViewComponent extends React.Component {
-	constructor(props, context) {
-		super(props, context);
+class MissionTreeViewComponent
+    extends React.Component {
 
-		this.state = {
-			missions: this.props.missions,
-			editedMissions: this.props.editedMissions,
-			selectedMission: 0,
-			selectedMLeg: 0
-		}
+    static contextType = MissionPlannerContext;
 
-		this.changeMissionType = this.changeMissionType.bind(this);
+    constructor(props, context) {
+        super(props, context);
 
-	}
+        this.state = {
+            missions: this._clone(this.props.missions),
+        };
 
-	selectMission(index) {
-		this.props.selectMissionPointFunc(0);
-		if (index === this.state.selectedMission) {
-			this.setState({
-				selectedMission: 0,
-				selectedMLeg: 0
-			});
-			this.props.viewMissionFunc(-1);
-			return;
-		}
+        this.missionViewRef = React.createRef();
+    }
 
-		this.setState({
-			selectedMission: index,
-			selectedMLeg: 0
-		});
-		this.props.viewMissionFunc(index-1);
-	}
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevProps.missions !== this.props.missions) {
+            this.setState({
+                missions: this._clone(this.props.missions),
+            });
+        }
+    }
 
-	selectMleg(index) {
-		// console.log(index);
-		this.setState({
-			selectedMLeg: index
-		});
-		this.props.selectMissionPointFunc(index);
-	}
+    render() {
+        return (
+            <div>
+                <div className={css(styles.missionsContainer)}>
+                    <ul>
+                        {this.state.missions.map((mission, index) => {
+                            const isSelected = (this.context.missionIndex === index);
+                            const isModified = mission.updatedAt;
+                            return (
+                                <ListGroup.Item key={index}>
+                                    <div onClick={(e) => this._onMissionSelected(e, mission, index)}
+                                         className={isSelected ? 'caret caret-down' : 'caret'}>
+                                        {isModified && (
+                                            <span className="editedMission">*</span>
+                                        )}
+                                        <span>Mission #{index + 1}</span>
+                                        {isModified && (
+                                            <FontAwesomeIcon className="saveChangesBtn"
+                                                             icon={faSave}
+                                                             onClick={(e) => this._onSaveChangesRequested(e, mission, index)}
+                                                             title="Save changes"/>
+                                        )}
+                                        {isModified && (
+                                            <FontAwesomeIcon className="discardChangesBtn"
+                                                             icon={faTimes}
+                                                             onClick={(e) => this._onDiscardChangesRequested(e, mission, index)}
+                                                             title="Discard changes"/>
+                                        )}
+                                        <FontAwesomeIcon className="deleteMissionBtn"
+                                                         icon={faTrashAlt}
+                                                         onClick={(e) => this._onDeleteMissionRequested(e, mission, index)}
+                                                         title="Delete mission"/>
+                                    </div>
+                                    {isSelected && (
+                                        <MissionViewComponent ref={this.missionViewRef}/>
+                                    )}
+                                </ListGroup.Item>
+                            );
+                        })}
+                        <ListGroup.Item
+                            onClick={() => this.addNewMission()}
+                            key="newMission"
+                            className="addMissionBtn">
+                            +
+                        </ListGroup.Item>
+                    </ul>
+                </div>
 
-	addNewMission(e) {
-		console.log("add new mission");
-		var missionsArr = this.state.missions;
-		var editedMissions = this.state.editedMissions;
-		if (missionsArr === null) {
-			missionsArr = [];
-			editedMissions = [];
-		}
+                <MLegInfoComponent missionLeg={this.context.task}
+                                   onChange={(task) => this._onTaskChanged(task)}/>
 
-		missionsArr.push([]);
-		editedMissions.push(1);
+                <Modal
+                    show={this.state.showSaveChangesDialog}
+                    backdrop="static"
+                    keyboard={false}>
+                    <Modal.Header>
+                        <Modal.Title>Save changes</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        Are you sure you want to save changes to mission #{this.state.saveChangesMissionIndex + 1}?
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary"
+                                onClick={(e) => this._onSaveChangesCancelled(e)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary"
+                                onClick={(e) => this._onSaveChangesConfirmed(e)}>
+                            Confirm
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
-		this.setState({
-			missions: missionsArr,
-			editedMissions: editedMissions,
-			selectedMission: missionsArr.length,
-			selectedMLeg: 0
-		});
-		this.props.viewMissionFunc(missionsArr.length - 1);
+                <Modal
+                    show={this.state.showDiscardChangesDialog}
+                    backdrop="static"
+                    keyboard={false}>
+                    <Modal.Header>
+                        <Modal.Title>Discard changes</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        Are you sure you want to discard changes to mission #{this.state.discardChangesMissionIndex + 1}?
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary"
+                                onClick={(e) => this._onDiscardChangesCancelled(e)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary"
+                                onClick={(e) => this._onDiscardChangesConfirmed(e)}>
+                            Confirm
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
-	}
+                <Modal
+                    show={this.state.showDeleteMissionDialog}
+                    backdrop="static"
+                    keyboard={false}>
+                    <Modal.Header>
+                        <Modal.Title>Delete mission</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        Are you sure you want to delete mission #{this.state.deleteMissionIndex + 1}?
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary"
+                                onClick={(e) => this._onDeleteMissionCancelled(e)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary"
+                                onClick={(e) => this._onDeleteMissionConfirmed(e)}>
+                            Confirm
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            </div>
+        );
+    }
 
-	saveChanges(missionNumber) {
-		console.log("Saving changes for Mission " + missionNumber);
+    // ---- public methods ----
 
-		this.props.management.updateMission(this.state.missions[missionNumber - 1], missionNumber)
-			.then(response => {
-				console.log(response);
-				var editedMissions = this.state.editedMissions;
-				editedMissions[missionNumber - 1] = 0;
-				this.setState({
-					editedMissions: editedMissions
-				});
-			})
-			.catch(reason => {
-				console.log('Error: could not save mission to the vehicle', reason);
-			});
-	}
+    handleEvent(e) {
+        if (this.missionViewRef.current) {
+            this.missionViewRef.current.handleEvent(e);
+        }
+    }
 
-	discardChanges(missionNumber) {
-		var missionsArray = this.state.missions;
-		var editedMissions = this.state.editedMissions;
+    // ---- ui events ----
 
-		this.props.management.getMissions()
-			.then(missions => {
-				console.log("Discarding changes for Mission " + missionNumber);
-				if ( missionNumber > missions.length ) {
-					console.log("discarding new mission");
-					missionsArray.splice(missionNumber - 1, 1);
-					editedMissions.splice(missionNumber - 1, 1);
-					missionNumber = 0;
-				} else {
-					missionsArray[missionNumber - 1] = missions[missionNumber - 1];
-					editedMissions[missionNumber - 1] = 0;
-				}
+    _onMissionSelected(e, mission, index) {
+        this.context.mission = mission;
+        this.context.missionIndex = index;
+        this.context.task = null;
+        this.context.taskIndex = -1;
+    }
 
-				this.setState({
-					missions: missionsArray,
-					editedMissions: editedMissions
-				});
-				this.selectMission(missionNumber);
-			})
-			.catch(reason => {
-				console.log('Error: could not get missions from vehicle', reason);
-			});
-	}
+    _onTaskChanged(task) {
+        const mission = this.context.mission;
+        mission.updatedAt = Date.now();
+        this.context.mission = {...mission};
+    }
 
-	deleteMission(missionNumber) {
-		// TODO: Yet to be implemented on backend
-		// this.props.management.deleteMission(missionNumber);
-		console.log("Deleting Mission " + missionNumber);
-	}
+    _onDiscardChangesRequested(e, mission, index) {
+        e.stopPropagation();
 
-	deleteMissionPt(missionNumber, missionPtNumber) {
-		console.log(missionNumber + " " + missionPtNumber);
-		var missions = this.state.missions
-		missions[missionNumber].splice(missionPtNumber, 1);
-		var editedMissions = this.state.editedMissions;
-		editedMissions[missionNumber] = 1;
-		this.setState({
-			missions: missions,
-			editedMissions: editedMissions
-		});
-		console.log(missionNumber);
-		this.props.viewMissionFunc(missionNumber);
-	}
+        if (!this.context.mission.updatedAt) {
+            return;
+        }
 
-	changeMissionType(newType){
-		this.props.changeMissionType(this.state.selectedMLeg, newType);
-	}
+        this.setState({
+            showDiscardChangesDialog: true,
+            discardChangesMissionIndex: index,
+        });
+    }
 
-	render() {
+    _onDiscardChangesConfirmed(e) {
+        const index = this.state.discardChangesMissionIndex;
+        const missions = this.state.missions;
+        const clonedOriginalMission = this._clone(this.props.missions[index]);
+        missions[index] = clonedOriginalMission;
+        this.setState({
+            showDiscardChangesDialog: false,
+            missions: [...missions],
+        });
+        this.context.mission = clonedOriginalMission;
+        this.context.task = null;
+        this.context.taskIndex = -1;
+    }
 
-		var missionList = [];
-		var missionLeg = null;
+    _onDiscardChangesCancelled(e) {
+        this.setState({
+            showDiscardChangesDialog: false,
+            discardChangesMissionIndex: -1,
+        });
+    }
 
-		if (this.state.missions !== null) {
+    _onSaveChangesRequested(e, mission, index) {
+        e.stopPropagation();
 
-			this.state.missions.forEach((mission, i) => {
+        if (!this.context.mission.updatedAt) {
+            return;
+        }
 
-				var missionLegList = [];
-				mission.forEach((missionLeg, j) => {
-					var activeMleg = (this.state.selectedMLeg == j+1) ? "active" : "" ;
-					missionLegList.push(
-						<ListGroup.Item action className={activeMleg} onClick={() => this.selectMleg(j+1)}>
-							<span>{missionLeg.taskID.substring(0, missionLeg.taskID.indexOf("MT") + 2)} : {missionLeg.mp.x.toFixed(2)}, {missionLeg.mp.y.toFixed(2)}, {missionLeg.mp.z.toFixed(2)}</span>
-							<FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMissionPt(i,j)} title="Delete Mission Point"/>
-						</ListGroup.Item>
-					);
-				});
+        this.setState({
+            showSaveChangesDialog: true,
+            saveChangesMissionIndex: index,
+        });
+    }
 
-				missionLegList.push(<ListGroup.Item className="AddMissionPointComment"> Right Click on map to add mission point </ListGroup.Item>);
+    _onSaveChangesConfirmed(e) {
+        this.setState({
+            showSaveChangesDialog: false,
+            saveChangesMissionIndex: -1,
+        });
 
-				var nestedClass = (this.state.selectedMission === (i+1)) ? "show-nested" : "hide-nested";
-				var caretDown = (this.state.selectedMission === (i+1)) ? "caret caret-down" : "caret";
-				var editedAstrix = "";
-				if (this.state.editedMissions[i] === 1) {
-					editedAstrix = <span className="editedMission"> * </span>
-				}
-				missionList.push(
-					<ListGroup.Item>
-						<span onClick={() => this.selectMission(i+1)} className={caretDown}>{editedAstrix} Mission No. {i+1}</span>
-						<FontAwesomeIcon className="saveChangesBtn" icon={faSave} onClick={() => this.saveChanges(i+1)} title="Save Changes to Mission"/>
-						<FontAwesomeIcon className="discardChangesBtn" icon={faTimes} onClick={() => this.discardChanges(i+1)} title="Discard Changes to Mission"/>
-						<FontAwesomeIcon className="deleteMissionBtn" icon={faTrashAlt} onClick={() => this.deleteMission(i+1)} title="Delete Mission"/>
-						<ListGroup className={nestedClass}>
-							{missionLegList}
-						</ListGroup>
-					</ListGroup.Item>
-				);
-			});
+        // TODO
+    }
 
+    _onSaveChangesCancelled(e) {
+        this.setState({
+            showSaveChangesDialog: false,
+            saveChangesMissionIndex: -1,
+        });
+    }
 
-			missionLeg = (this.state.selectedMission > 0 && this.state.selectedMission <= this.state.missions.length && this.state.selectedMLeg > 0 && this.state.selectedMLeg <= this.state.missions[this.state.selectedMission - 1].length) ? this.state.missions[this.state.selectedMission - 1][this.state.selectedMLeg - 1] : null;
-			// console.log(missionLeg);
-		}
+    _onDeleteMissionRequested(e, mission, index) {
+        e.stopPropagation();
 
-		missionList.push(<ListGroup.Item onClick={() => this.addNewMission()} className="addMissionBtn"> + </ListGroup.Item>);
+        this.setState({
+            showDeleteMissionDialog: true,
+            deleteMissionIndex: index,
+        });
+    }
 
+    _onDeleteMissionConfirmed(e) {
+        this.setState({
+            showDeleteMissionDialog: false,
+            deleteMissionIndex: -1,
+        });
 
-		return (
-			<div>
-				<div className={css(styles.missionsContainer)}>
-					<ul>
-						{missionList}
-					</ul>
-				</div>
-				<MLegInfoComponent changeMissionType={this.changeMissionType} refreshMissionMarkersFunc={this.props.viewMissionFunc} missionIndex={this.state.selectedMission} missionLeg={missionLeg} editedMissions={this.state.editedMissions}/>
-			</div>
-		);
-	}
+        // TODO
+    }
+
+    _onDeleteMissionCancelled(e) {
+        this.setState({
+            showDeleteMissionDialog: false,
+            deleteMissionIndex: -1,
+        });
+    }
+
+    // ----
+
+    addNewMission(e) {
+        console.log("add new mission");
+        var missionsArr = this.state.missions;
+        if (missionsArr === null) {
+            missionsArr = [];
+        }
+
+        missionsArr.push([]);
+
+        this.setState({
+            missions: missionsArr,
+            selectedMLeg: 0
+        });
+        this.props.viewMissionFunc(missionsArr.length - 1);
+    }
+
+    saveChanges(missionNumber) {
+        console.log("Saving changes for Mission " + missionNumber);
+
+        this.props.management.updateMission(this.state.missions[missionNumber - 1], missionNumber)
+            .then(response => {
+                console.log(response);
+            })
+            .catch(reason => {
+                console.log('Error: could not save mission to the vehicle', reason);
+            });
+    }
+
+    _clone(o) {
+        return JSON.parse(JSON.stringify(o));
+    }
 }
 
 export default MissionTreeViewComponent;

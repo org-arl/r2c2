@@ -120,7 +120,7 @@ export class Management {
     /**
      * Gets missions.
      *
-     * @returns {Promise<Array>} Promise returning the missions.
+     * @returns {Promise<Object>} Promise returning the missions.
      */
     getMissions() {
         return this._waitForReady()
@@ -132,7 +132,7 @@ export class Management {
                     this._gateway.request(request)
                         .then(response => {
                             if (response.perf === Performative.INFORM) {
-                                resolve(response.missions);
+                                resolve(response.missionDefinitions);
                             } else {
                                 reject(response.perf);
                             }
@@ -144,15 +144,15 @@ export class Management {
 	/**
      * Updates a mission.
      *
-     * @returns {Promise<Array>}
+     * @returns {Promise<String>}
      */
-    updateMission(updatedMission, missionNumber) {
+    updateMission(updatedMissionDefinition, missionNumber) {
         return this._waitForReady()
             .then(management => {
                 return new Promise((resolve, reject) => {
                     const request = new UpdateMissionReq({
                         recipient: this._managementAgentId,
-                        mission: updatedMission,
+                        mission: updatedMissionDefinition,
                         missionNumber: missionNumber
                     });
                     this._gateway.request(request)
