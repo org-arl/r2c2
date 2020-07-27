@@ -534,8 +534,10 @@ class MapComponent
         const href = window.location.href;
         const url = href.substring(0, href.lastIndexOf('/') + 1) + item;
         const w = window.open(url, item,
-            "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1")
-            .focus();
+            "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
+        if (w) {
+            w.focus();
+        }
     }
 
     _onCloseAllChildWindows(e) {
@@ -545,7 +547,9 @@ class MapComponent
             const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
             const w = window.open(url, tab,
                 "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
-            w.close();
+            if (w) {
+                w.close();
+            }
         });
     }
 
