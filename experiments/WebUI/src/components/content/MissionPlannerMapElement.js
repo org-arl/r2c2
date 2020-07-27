@@ -1,10 +1,12 @@
 import React from "react";
-import MissionPlannerContext from "./MissionPlanner";
 import {LayerGroup, Marker, Polyline} from "react-leaflet";
-import {mapPin, mapPinSelected} from "../../assets/MapIcons";
-import CustomReactComponent, {SECTION_CONTEXT, SECTION_STATE} from "./CustomReactComponent";
 
-export default class MissionPolyline
+import {mapPin, mapPinSelected} from "../../assets/MapIcons";
+
+import CustomReactComponent, {SECTION_CONTEXT, SECTION_STATE} from "./CustomReactComponent";
+import MissionPlannerContext from "./MissionPlanner";
+
+export default class MissionPlannerMapElement
     extends CustomReactComponent {
 
     static contextType = MissionPlannerContext;

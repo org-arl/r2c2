@@ -2,12 +2,13 @@ import React from "react";
 import {ListGroup} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
+import {Group, Line} from "pts";
+
+import CustomReactComponent, {SECTION_CONTEXT, SECTION_STATE} from "./CustomReactComponent";
 import StarfishMissions from "../../lib/StarfishMissions";
 import MissionPlannerContext from "./MissionPlanner";
-import {Group, Line} from "pts";
-import CustomReactComponent, {SECTION_CONTEXT, SECTION_STATE} from "./CustomReactComponent";
 
-class MissionViewComponent
+class MissionPlannerMissionComponent
     extends CustomReactComponent {
 
     static contextType = MissionPlannerContext;
@@ -176,4 +177,4 @@ class MissionViewComponent
     }
 }
 
-export default MissionViewComponent;
+export default MissionPlannerMissionComponent;

@@ -1,14 +1,13 @@
 import React from 'react';
 import {css, StyleSheet} from 'aphrodite';
 import {Button, ListGroup, Modal} from 'react-bootstrap';
-
-import MLegInfoComponent from './MLegInfoComponent';
-
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faPlusCircle, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
-import MissionViewComponent from "./MissionViewComponent";
-import MissionPlannerContext from "./MissionPlanner";
 import {toast, ToastContainer} from "react-toastify";
+
+import MissionPlannerContext from "./MissionPlanner";
+import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
+import MissionPlannerTaskComponent from "./MissionPlannerTaskComponent";
 
 const styles = StyleSheet.create({
     missionsContainer: {
@@ -25,7 +24,7 @@ const styles = StyleSheet.create({
     }
 });
 
-class MissionTreeViewComponent
+class MissionPlannerMissionsComponent
     extends React.Component {
 
     static contextType = MissionPlannerContext;
@@ -83,7 +82,7 @@ class MissionTreeViewComponent
                                                          title="Delete mission"/>
                                     </div>
                                     {isSelected && (
-                                        <MissionViewComponent ref={this.missionViewRef}/>
+                                        <MissionPlannerMissionComponent ref={this.missionViewRef}/>
                                     )}
                                 </ListGroup.Item>
                             );
@@ -96,8 +95,8 @@ class MissionTreeViewComponent
                     </ul>
                 </div>
 
-                <MLegInfoComponent missionLeg={this.context.task}
-                                   onChange={(task) => this._onTaskChanged(task)}/>
+                <MissionPlannerTaskComponent missionLeg={this.context.task}
+                                             onChange={(task) => this._onTaskChanged(task)}/>
 
                 <Modal
                     show={this.state.showSaveChangesDialog}
@@ -229,7 +228,9 @@ class MissionTreeViewComponent
                 this.context.task = null;
                 this.context.taskIndex = -1;
 
-                // TODO propagate change
+                if (this.props.onMissionUpdated) {
+                    this.props.onMissionUpdated(mission, index);
+                }
             })
             .catch(reason => {
                 console.log('Error: could not save mission', reason);
@@ -323,7 +324,9 @@ class MissionTreeViewComponent
                     this.context.task = null;
                     this.context.taskIndex = -1;
 
-                    // TODO propagate change
+                    if (this.props.onMissionDeleted) {
+                        this.props.onMissionDeleted(index);
+                    }
                 })
                 .catch(reason => {
                     console.log('Error: could not delete mission', reason);
@@ -361,4 +364,4 @@ class MissionTreeViewComponent
     }
 }
 
-export default MissionTreeViewComponent;
+export default MissionPlannerMissionsComponent;

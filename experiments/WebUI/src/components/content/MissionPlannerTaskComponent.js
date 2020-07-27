@@ -1,6 +1,7 @@
 import React, {Fragment} from 'react';
 import {css, StyleSheet} from 'aphrodite';
 import {Form, FormControl, ListGroup, Tab, Table} from 'react-bootstrap';
+
 import StarfishMissions, {TYPES} from "../../lib/StarfishMissions";
 
 const styles = StyleSheet.create({
@@ -18,7 +19,7 @@ const styles = StyleSheet.create({
 /*
  * properties: missionLeg
  */
-class MLegInfoComponent
+class MissionPlannerTaskComponent
     extends React.Component {
 
     constructor(props, context) {
@@ -302,4 +303,4 @@ class MLegInfoComponent
     }
 }
 
-export default MLegInfoComponent;
+export default MissionPlannerTaskComponent;

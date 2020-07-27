@@ -3,9 +3,6 @@ import { Map as LeafletMap, Marker, Popup, TileLayer, Circle, Polygon, Polyline 
 
 import CursorPositionComponent from './CursorPositionComponent';
 
-import MissionTreeViewComponent from './MissionTreeViewComponent';
-import '../../assets/MissionPlanner.css';
-
 import CoordSys from '../../assets/CoordSys.js';
 
 import { FjageHelper } from "../../assets/fjageHelper.js";
@@ -26,8 +23,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import fenceIcon from '../../assets/img/fence.svg';
 import missionPtsIcon from '../../assets/img/missionPtsIcon.svg';
 import pathIcon from '../../assets/img/path.svg';
+
 import MissionPlannerContext from "./MissionPlanner";
-import MissionPolyline from "./MissionPolyline";
+import MissionPlannerMapElement from "./MissionPlannerMapElement";
+import MissionPlannerMissionsComponent from "./MissionPlannerMissionsComponent";
+import '../../assets/MissionPlanner.css';
 
 console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
 
@@ -58,12 +58,11 @@ class MapComponent
 			latitude: 1.315456,
 			longitude: 103.737608
 		};
+		this.coordSys = new CoordSys(origin.latitude, origin.longitude);
 		const mapBoundaries = [
 			[1.319525, 103.741806],
 			[1.315456, 103.737608]
 		];
-		this.coordSys = new CoordSys(origin.latitude, origin.longitude,
-			mapBoundaries.top, mapBoundaries.left, mapBoundaries.right, mapBoundaries.bottom);
 
 		this.state = {
 			mapCenter: {
@@ -105,10 +104,7 @@ class MapComponent
 			missionNumber: -1,
 
 			currentMission: [],
-			selectedMissionPoint: 0,
-			MissionPlannerEnabled: false,
-
-			mapElement: null,
+			missionPlannerEnabled: false,
 
 			missionPlannerContext: {
 				coordSys: this.coordSys,
@@ -119,17 +115,10 @@ class MapComponent
 			},
 		};
 
-
 		this.runMission = this.runMission.bind(this);
 		this.viewMission = this.viewMission.bind(this);
-		this.getMapBoundaries = this.getMapBoundaries.bind(this);
-		this.recentreMap = this.recentreMap.bind(this);
 		this.setVehicleReady = this.setVehicleReady.bind(this);
 		this.setVehicleNotReady = this.setVehicleNotReady.bind(this);
-
-		this.toggleGeoFence = this.toggleGeoFence.bind(this);
-		this.toggleMissionPts = this.toggleMissionPts.bind(this);
-		this.toggleVehiclePath = this.toggleVehiclePath.bind(this);
 
 		this.enableDrawGeofence = this.enableDrawGeofence.bind(this);
 		this.undoGeoFencePoint = this.undoGeoFencePoint.bind(this);
@@ -139,19 +128,12 @@ class MapComponent
 
 		this.checkCollinear = this.checkCollinear.bind(this);
 		this.mapOnRightClick = this.mapOnRightClick.bind(this);
-		this.onMouseMove = this.onMouseMove.bind(this);
 
 		this.dragEndGeoFenceMarker = this.dragEndGeoFenceMarker.bind(this);
 
 		this.vehicleMarker = readyMarker;
 
 		this.vehicleId = null;
-
-		this.toggleMissionPlanner = this.toggleMissionPlanner.bind(this);
-
-		this.abortMission = this.abortMission.bind(this);
-		this.stationKeep = this.stationKeep.bind(this);
-		this.goHome = this.goHome.bind(this);
 
 		this.missionTreeViewRef = React.createRef();
 	}
@@ -214,58 +196,48 @@ class MapComponent
 					});
 
 				this.management.getOrigin()
-				.then(response => {
-					// console.log("origin: ");
-					// console.log(response);
-					this.setState({
-						origin: {
-							latitude: response.latitude,
-							longitude: response.longitude
-						},
-						polylineArray: []
+					.then(response => {
+						this.setState({
+							origin: {
+								latitude: response.latitude,
+								longitude: response.longitude
+							},
+							polylineArray: []
+						});
+						this.coordSys.updateOrigin(this.state.origin.latitude, this.state.origin.longitude);
+					})
+					.catch(reason => {
+						console.log('could not get origin', reason);
 					});
-					this.coordSys.updateOrigin(this.state.origin.latitude, this.state.origin.longitude);
-				})
-				.catch(reason => {
-					console.log('could not get origin', reason);
-				});
 
 				this.management.getGeofence()
-				.then(response => {
-					// console.log("Geofence: ");
-					// console.log(response);
-					var geoFenceCoordinates = [];
-
-					response.forEach((element) => {
-						geoFenceCoordinates.push([this.coordSys.locy2lat(element.y), this.coordSys.locx2long(element.x)]);
-					});
-
-					this.setState({
-						mapBoundaries: this.getMapBoundaries([...geoFenceCoordinates, [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude]])
+					.then(response => {
+						const geoFenceCoordinates = response
+							.map((element) => [this.coordSys.locy2lat(element.y), this.coordSys.locx2long(element.x)]);
+						this._setMapBoundaries([
+							...geoFenceCoordinates,
+							[this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude],
+						]);
+						this.setState({
+							geoFenceCoordinates: geoFenceCoordinates,
+						});
 					})
-					//set bounds of the map so that it is a minimum rectange containing the geofence.
-					this.mapRef.leafletElement.fitBounds(this.state.mapBoundaries);
-					// console.log(this.state.mapBoundaries);
-					this.setState({
-						geoFenceCoordinates: geoFenceCoordinates
+					.catch(reason => {
+						console.log('could not get geofence', reason);
 					});
-				})
-				.catch(reason => {
-					console.log('could not get geofence', reason);
-				});
 
 				this.management.getMeasurement("Position", 4, 1.0)
-				.then(measurement => {
-					var measurementObj = measurement.items;
-					if (!isNaN(measurementObj[2].value) && isNaN(measurementObj[3].value)) {
-						this.setState({
-							positionError: (measurementObj[2].value + measurementObj[3].value) / 2
-						});
-					}
-				})
-				.catch(reason => {
-					console.log('could not get measurement', reason);
-				});
+					.then(measurement => {
+						var measurementObj = measurement.items;
+						if (!isNaN(measurementObj[2].value) && isNaN(measurementObj[3].value)) {
+							this.setState({
+								positionError: (measurementObj[2].value + measurementObj[3].value) / 2
+							});
+						}
+					})
+					.catch(reason => {
+						console.log('could not get measurement', reason);
+					});
 			}
 		});
 
@@ -302,28 +274,6 @@ class MapComponent
 			autoClose: false
 		});
 		this.vehicleMarker = notReadyMarker;
-	}
-
-	getMapBoundaries(geoFenceCoordinates){
-		// console.log(geoFenceCoordinates);
-		var minlat, maxlat, minlong, maxlong;
-		minlat = maxlat = geoFenceCoordinates[0][0];
-		minlong = maxlong = geoFenceCoordinates[0][1];
-		for (var i = 0; i < geoFenceCoordinates.length; i++) {
-			if (geoFenceCoordinates[i][0] < minlat) {
-				minlat = geoFenceCoordinates[i][0];
-			}
-			if (geoFenceCoordinates[i][0] > maxlat) {
-				maxlat = geoFenceCoordinates[i][0];
-			}
-			if (geoFenceCoordinates[i][1] < minlong) {
-				minlong = geoFenceCoordinates[i][1];
-			}
-			if (geoFenceCoordinates[i][1] > maxlong) {
-				maxlong = geoFenceCoordinates[i][1];
-			}
-		}
-		return [[minlat, minlong],[maxlat, maxlong]];
 	}
 
 	runMission(num) {
@@ -377,39 +327,8 @@ class MapComponent
 		});
 	}
 
-	recentreMap(e){
-		this.setState({
-			mapBoundaries: this.getMapBoundaries([...this.state.geoFenceCoordinates, [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude]])
-		})
-		this.mapRef.leafletElement.fitBounds(this.state.mapBoundaries);
-	}
-
-	toggleGeoFence(e) {
-		if(this.state.displayGeoFence === true){
-			this.state.displayGeoFence = false;
-		} else {
-			this.state.displayGeoFence = true;
-		}
-	}
-
-	toggleMissionPts(e) {
-		if(this.state.displayMissionPts === true){
-			this.state.displayMissionPts = false;
-		} else {
-			this.state.displayMissionPts = true;
-		}
-	}
-
-	toggleVehiclePath(e) {
-		if(this.state.displayVehiclePath === true){
-			this.state.displayVehiclePath = false;
-		} else {
-			this.state.displayVehiclePath = true;
-		}
-	}
-
 	enableDrawGeofence(e){
-		if (!this.state.MissionPlannerEnabled) {
+		if (!this.state.missionPlannerEnabled) {
 			this.setState({
 				drawingGeoFence: true,
 				drawGeoFence: this.state.geoFenceCoordinates
@@ -509,18 +428,6 @@ class MapComponent
 		}
 	}
 
-	onMouseMove(e) {
-		// console.log(e.latlng);
-		this.setState({
-			cursorPosition: {
-				latitude: e.latlng.lat.toFixed(6),
-				longitude: e.latlng.lng.toFixed(6),
-				x: this.coordSys.long2locx(e.latlng.lng).toFixed(6),
-				y: this.coordSys.lat2locy(e.latlng.lat).toFixed(6)
-			}
-		});
-	}
-
 	dragEndGeoFenceMarker(e) {
 		var newlat = e.target._latlng.lat;
 		var newlng = e.target._latlng.lng;
@@ -542,32 +449,7 @@ class MapComponent
 		});
 	}
 
-	toggleMissionPlanner(e) {
-		if (this.state.MissionPlannerEnabled) {
-			this.setState({
-				MissionPlannerEnabled: false
-			});
-		} else {
-			this.setState({
-				MissionPlannerEnabled: true
-			});
-		}
-	}
-
-	abortMission() {
-		console.log("Abort Mission!");
-		this.management.abortMission();
-	}
-
-	stationKeep() {
-		console.log("Station Keep!");
-		this.management.stationKeep();
-	}
-
-	goHome() {
-		console.log("Go Home!");
-		this.management.abortToHome();
-	}
+	// ----
 
 	render() {
 		const position = [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude];
@@ -616,10 +498,10 @@ class MapComponent
 		const vehiclePath = (this.state.displayVehiclePath && !this.state.drawingGeoFence) ? <Polyline id="vehiclePath" positions={this.state.polylineArray} color="yellow"/> : null;
 
 		const drawGeoFenceOptions = (this.state.drawingGeoFence) ? <div className="drawGeoFence_content">
-			<Button type="submit" title="Undo last point" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
-			<Button type="submit" title="Save Geofence" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
-			<Button type="submit" title="Cancel Geofence" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
-			<Button type="submit" title="Clear Geofence" onClick={this.clearNewGeoFence}><FontAwesomeIcon icon={faTrashAlt} color="#fff" /></Button>
+			<Button title="Undo last point" onClick={this.undoGeoFencePoint}><FontAwesomeIcon icon={faUndo} color="#fff" /></Button>
+			<Button title="Save Geofence" onClick={this.saveNewGeoFence}><FontAwesomeIcon icon={faSave} color="#fff" /></Button>
+			<Button title="Cancel Geofence" onClick={this.cancelNewGeoFence}><FontAwesomeIcon icon={faWindowClose} color="#fff" /></Button>
+			<Button title="Clear Geofence" onClick={this.clearNewGeoFence}><FontAwesomeIcon icon={faTrashAlt} color="#fff" /></Button>
 		</div> : null;
 
 		const drawGeoFenceMarkers = [];
@@ -640,30 +522,17 @@ class MapComponent
 		</Marker>,
 		<Circle center={position} radius={this.state.positionError}/>] : null;
 
-		const MissionPlannerPanels = (this.state.MissionPlannerEnabled)
-            ? (
-                <Row>
-                    <MissionTreeViewComponent ref={this.missionTreeViewRef}
-											  missions={this.state.missions}
-
-                                              viewMissionFunc={this.viewMission}
-                                              management={this.management}/>
-                </Row>
-            )
-            : null;
-
 		return (
 			<MissionPlannerContext.Provider value={this.state.missionPlannerContext}>
 				<LeafletMap ref={(ref) => this.mapRef = ref}
 							center={mapCenter}
 							zoom={this.state.zoom}
 							onContextMenu={this.mapOnRightClick}
-							onMouseMove={this.onMouseMove}>
-					<TileLayer
-						attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-						url={tileUrl}
-						minZoom={1}
-						maxZoom={17}
+							onMouseMove={(e) => this._onMouseMove(e)}>
+					<TileLayer attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+							   url={tileUrl}
+							   minZoom={1}
+							   maxZoom={17}
 					/>
 
 					{vehicle}
@@ -675,8 +544,11 @@ class MapComponent
 					<Polygon id="drawGeoFence" positions={this.state.drawGeoFence} color="blue"/>
 					{drawGeoFenceMarkers}
 
-					<MissionPolyline/>
+					{this.state.missionPlannerEnabled && (
+						<MissionPlannerMapElement/>
+					)}
 				</LeafletMap>
+
 				<Container className={css(styles.map_options_styles)}>
 					<Row>
 						<ToolbarComponent onClick={(clickedItem) => {this.openNewWindow(clickedItem)}}/>
@@ -687,34 +559,185 @@ class MapComponent
 							</div>
 						</div>
 
-						<Button type="submit" onClick={this.closeAllChildWindows}><FontAwesomeIcon icon={faWindowClose} title="Close all Child Windows"/></Button>
+						<Button onClick={this.closeAllChildWindows}>
+							<FontAwesomeIcon icon={faWindowClose} title="Close all child windows"/>
+						</Button>
 
-						<Button type="submit" onClick={this.recentreMap}><FontAwesomeIcon icon={faCrosshairs}  title="Re-center Map"/></Button>
-						<Button type="submit" active={this.state.displayGeoFence} onClick={this.toggleGeoFence}><img title="Toggle Geofence" src={fenceIcon} height={20} width={20}/></Button>
-						<Button type="submit" active={this.state.displayMissionPts} onClick={this.toggleMissionPts}><img title="Toggle Mission Points" src={missionPtsIcon} height={25} width={25}/></Button>
-						<Button type="submit" active={this.state.displayVehiclePath} onClick={this.toggleVehiclePath}><img title="Toggle Vehicle Path"  src={pathIcon} height={20} width={20}/></Button>
+						<Button onClick={(e) => this._onRecentreMap(e)}>
+							<FontAwesomeIcon icon={faCrosshairs} title="Re-center map"/>
+						</Button>
+						<Button active={this.state.displayGeoFence}
+								onClick={(e) => this._onToggleGeoFence(e)}>
+							<img title="Toggle geofence" src={fenceIcon} height={20} width={20}/>
+						</Button>
+						<Button active={this.state.displayMissionPts}
+								onClick={(e) => this._onToggleMissionPts(e)}>
+							<img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}/>
+						</Button>
+						<Button active={this.state.displayVehiclePath}
+								onClick={(e) => this._onToggleVehiclePath(e)}>
+							<img title="Toggle vehicle path" src={pathIcon} height={20} width={20}/>
+						</Button>
 
 						<div className="mission_options">
-							<Button type="submit" onClick={this.abortMission}><FontAwesomeIcon icon={faBan}  title="Abort Mission"/></Button>
-							<Button type="submit" onClick={this.stationKeep}><FontAwesomeIcon icon={faSatellite}  title="Station Keep"/></Button>
-							<Button type="submit" onClick={this.goHome}><FontAwesomeIcon icon={faHome}  title="Go Home"/></Button>
+							<Button onClick={(e) => this._onAbortMission(e)}>
+								<FontAwesomeIcon icon={faBan} title="Abort mission"/>
+							</Button>
+							<Button onClick={(e) => this._onStationKeep(e)}>
+								<FontAwesomeIcon icon={faSatellite} title="Station-keep"/>
+							</Button>
+							<Button onClick={(e) => this._onGoHome(e)}>
+								<FontAwesomeIcon icon={faHome} title="Go home"/>
+							</Button>
 						</div>
 
 						<div className="drawGeoFence_styles">
-							<Button type="submit" onClick={this.enableDrawGeofence}>Draw GeoFence</Button>
+							<Button onClick={this.enableDrawGeofence}>
+								Draw GeoFence
+							</Button>
 							{drawGeoFenceOptions}
 						</div>
+
 						<div>
-							<Button type="submit" active={this.state.MissionPlannerEnabled} onClick={this.toggleMissionPlanner}>MissionPlanner</Button>
+							<Button active={this.state.missionPlannerEnabled}
+									onClick={(e) => this._onToggleMissionPlanner(e)}>
+								MissionPlanner
+							</Button>
 						</div>
 					</Row>
 
-					{MissionPlannerPanels}
+					{this.state.missionPlannerEnabled && (
+						<Row>
+							<MissionPlannerMissionsComponent ref={this.missionTreeViewRef}
+															 missions={this.state.missions}
+															 management={this.management}
+															 onMissionUpdated={(mission, index) => this._onMissionUpdated(mission, index)}
+															 onMissionDeleted={(index) => this._onMissionDeleted(index)}/>
+						</Row>
+					)}
 
 					<CursorPositionComponent position={this.state.cursorPosition} />
 				</Container>
 			</MissionPlannerContext.Provider>
 		);
+	}
+
+	// ----
+
+	_onMouseMove(e) {
+		this.setState({
+			cursorPosition: {
+				latitude: e.latlng.lat.toFixed(6),
+				longitude: e.latlng.lng.toFixed(6),
+				x: this.coordSys.long2locx(e.latlng.lng).toFixed(3),
+				y: this.coordSys.lat2locy(e.latlng.lat).toFixed(3)
+			}
+		});
+	}
+
+	_onMissionUpdated(mission, index) {
+		const missions = this.state.missions;
+		if ((index < 0) || (index >= missions.length)) {
+			return;
+		}
+		missions[index] = mission;
+		this.setState({
+			missions: [...missions],
+		});
+	}
+
+	_onMissionDeleted(index) {
+		const missions = this.state.missions;
+		if ((index < 0) || (index >= missions.length)) {
+			return;
+		}
+		missions.splice(index, 1);
+		this.setState({
+			missions: [...missions],
+		});
+	}
+
+	_onToggleMissionPlanner(e) {
+		this.setState({
+			missionPlannerEnabled: !this.state.missionPlannerEnabled,
+		});
+	}
+
+	// ---- map controls ----
+
+	_onRecentreMap(e) {
+		this._setMapBoundaries([
+			...this.state.geoFenceCoordinates,
+			[this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude],
+		]);
+	}
+
+	_onToggleGeoFence(e) {
+		this.setState({
+			displayGeoFence: !this.state.displayGeoFence,
+		});
+	}
+
+	_onToggleMissionPts(e) {
+		this.setState({
+			displayMissionPts: !this.state.displayMissionPts,
+		});
+	}
+
+	_onToggleVehiclePath(e) {
+		this.setState({
+			displayVehiclePath: !this.state.displayVehiclePath,
+		});
+	}
+
+	// ---- operator commands ----
+
+	_onAbortMission(e) {
+		console.log("Abort Mission!");
+		this.management.abortMission();
+	}
+
+	_onStationKeep(e) {
+		console.log("Station Keep!");
+		this.management.stationKeep();
+	}
+
+	_onGoHome(e) {
+		console.log("Go Home!");
+		this.management.abortToHome();
+	}
+
+	// ---- map methods ----
+
+	_setMapBoundaries(coords) {
+		const mapBoundaries = this._determineMapBoundaries(coords);
+		this.setState({
+			mapBoundaries: mapBoundaries,
+		});
+		this.mapRef.leafletElement.fitBounds(mapBoundaries);
+	}
+
+	_determineMapBoundaries(coords) {
+		let minLat, maxLat, minLong, maxLong;
+		minLat = maxLat = coords[0][0];
+		minLong = maxLong = coords[0][1];
+		for (let i = 1; i < coords.length; i++) {
+			const lat = coords[i][0];
+			const long = coords[i][1];
+			if (lat < minLat) {
+				minLat = lat;
+			}
+			if (lat > maxLat) {
+				maxLat = lat;
+			}
+			if (long < minLong) {
+				minLong = long;
+			}
+			if (long > maxLong) {
+				maxLong = long;
+			}
+		}
+		return [[minLat, minLong],[maxLat, maxLong]];
 	}
 }
 
