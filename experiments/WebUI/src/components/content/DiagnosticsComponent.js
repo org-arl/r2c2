@@ -1,147 +1,173 @@
 import React from 'react'
-import { Table } from 'react-bootstrap';
+import {Container, Row, Table} from 'react-bootstrap';
 
-import { FjageHelper } from "../../assets/fjageHelper.js";
-import { Management } from "../../assets/jc2.js";
-import { StyleSheet, css } from 'aphrodite';
+import {FjageHelper} from "../../assets/fjageHelper.js";
+import {Management} from "../../assets/jc2.js";
+import {css, StyleSheet} from 'aphrodite';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
-import {Container, Row} from 'react-bootstrap';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faCheck, faTimes} from '@fortawesome/free-solid-svg-icons'
 
 const styles = StyleSheet.create({
     table_styles: {
-    	fontSize: "0.75em"
+        fontSize: "0.75em"
     },
     errorRow: {
-    	backgroundColor: "#ffbfba"
+        backgroundColor: "#ffbfba"
     }
 });
 
-class DiagnosticsComponent extends React.Component {
-	constructor(props, context) {
-		super(props, context);
+const TICK = <FontAwesomeIcon icon={faCheck} color="green"/>;
+const CROSS = <FontAwesomeIcon icon={faTimes} color="red"/>;
 
-		this.gateway = FjageHelper.getGateway();
+const HEALTH_MAP = {
+    "OFFLINE": {
+        online: false,
+        healthy: null,
+        data: null,
+        type: 'error',
+    },
+    "MALFUNCTION": {
+        online: true,
+        healthy: false,
+        data: null,
+        type: 'error',
+    },
+    "UNAVAILABLE": {
+        online: true,
+        healthy: true,
+        data: false,
+        type: 'error',
+    },
+    "HEALTHY": {
+        online: true,
+        healthy: true,
+        data: true,
+        type: null,
+    },
+};
 
-		this.state = {
-			diagnostics: []
+const DEFAULT_HEALTH = {
+    online: null,
+    healthy: null,
+    data: null,
+    type: null,
+}
 
-		};
+function getHealthDescriptor(health) {
+    let healthDescriptor = HEALTH_MAP[health];
+    if (!healthDescriptor) {
+        healthDescriptor = DEFAULT_HEALTH;
+    }
+    return healthDescriptor;
+}
 
-	}
+function getSubStatusIcon(value) {
+    if (value === null) {
+        return null;
+    } else if (value) {
+        return TICK;
+    } else {
+        return CROSS;
+    }
+}
 
-	componentDidMount() {
+class DiagnosticsComponent
+    extends React.Component {
 
-		this.gateway.addConnListener((connected) => {
-			if (connected) {
-				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
-				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
+    constructor(props, context) {
+        super(props, context);
 
-				this.management = new Management(this.gateway);
+        this.gateway = FjageHelper.getGateway();
 
-				this.management.getVehicleId()
-					.then(vehicleId => {
-						console.log('vehicleId', vehicleId);
-						this.vehicleId = vehicleId;
-					})
-					.catch(reason => {
-						console.log('could not get vehicle ID', reason);
-					});
+        this.state = {
+            diagnostics: [],
+        };
+    }
 
-				this.management.getHealth()
-				.then(response => {
-					// console.log(response);
-					this.setState({
-						diagnostics: response
-					});
-				})
-				.catch(reason => {
-					console.log('could not get health', reason);
-				});
-			}
-		});
+    componentDidMount() {
+        this.gateway.addConnListener((connected) => {
+            if (connected) {
+                this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
+                this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
 
+                this.management = new Management(this.gateway);
 
-	}
+                this.management.getVehicleId()
+                    .then(vehicleId => {
+                        console.log('vehicleId', vehicleId);
+                        this.vehicleId = vehicleId;
+                    })
+                    .catch(reason => {
+                        console.log('could not get vehicle ID', reason);
+                    });
 
-	componentDidUpdate() {
+                this.management.getHealth()
+                    .then(response => {
+                        // console.log(response);
+                        this.setState({
+                            diagnostics: response
+                        });
+                    })
+                    .catch(reason => {
+                        console.log('could not get health', reason);
+                    });
+            }
+        });
+    }
 
+    componentWillUnmount() {
+        this.gateway.close();
+    }
 
-	}
+    render() {
+        if (this.vehicleId) {
+            document.title = this.vehicleId + " Diagnostics";
+        } else {
+            document.title = "Diagnostics";
+        }
 
-	componentWillUnmount() {
-		this.gateway.close();
-	}
+        const errorClass = css(styles.errorRow);
 
-	render() {
-		if (this.vehicleId) {
-			document.title = this.vehicleId + " Diagnostics";
-		} else {
-			document.title = "Diagnostics";
-		}
-		// console.log(this.state.diagnostics);
-		var diagnosticsRows = [];
-		for (var i = 0; i < this.state.diagnostics.length; i++) {
-			var status = [];
-			const tick = <FontAwesomeIcon icon={faCheck} color="green" />;
-			const cross = <FontAwesomeIcon icon={faTimes} color="red" />;
-			const errorClass = css(styles.errorRow);
-			var addClass = null;
-			switch(this.state.diagnostics[i].health){
-				case "OFFLINE":
-					addClass = errorClass;
-					status = [cross,,];
-					break;
-				case "MALFUNCTION":
-					addClass = errorClass;
-					status = [tick,cross,];
-					break;
-				case "UNAVAILABLE":
-					addClass = errorClass;
-					status = [tick,tick,cross];
-					break;
-				case "HEALTHY":
-					status = [tick,tick,tick];
-					break;
-			}
-			diagnosticsRows.push(
-				<tr key={i} className={addClass}>
-					<td>{i+1}</td>
-					<td>{this.state.diagnostics[i].name}</td>
-					<td>{status[0]}</td>
-					<td>{status[1]}</td>
-					<td>{status[2]}</td>
-				</tr>
-			);
-		}
-
-		return (
-			<Container>
-				<Row>
-					<h3>Diagnostics</h3>
-				</Row>
-				<Row>
-					<Table striped bordered hover size="sm" className={css(styles.table_styles)}>
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Name</th>
-								<th>Online</th>
-								<th>Healthy</th>
-								<th>Data</th>
-							</tr>
-						</thead>
-						<tbody>
-							{diagnosticsRows}
-						</tbody>
-					</Table>
-				</Row>
-			</Container>
-
-
-		);
-	}
+        return (
+            <Container>
+                <Row>
+                    <h3>Diagnostics</h3>
+                </Row>
+                <Row>
+                    <Table striped bordered hover size="sm" className={css(styles.table_styles)}>
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Online</th>
+                            <th>Healthy</th>
+                            <th>Data</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {this.state.diagnostics.map((entry, index) => {
+                            const healthDescriptor = getHealthDescriptor(entry.health);
+                            let rowClass = null;
+                            if (healthDescriptor.type === 'error') {
+                                rowClass = errorClass;
+                            }
+                            return (
+                                <tr key={index} className={rowClass}>
+                                    <td>{index + 1}</td>
+                                    <td>{entry.name}</td>
+                                    <td>{getSubStatusIcon(healthDescriptor.online)}</td>
+                                    <td>{getSubStatusIcon(healthDescriptor.healthy)}</td>
+                                    <td>{getSubStatusIcon(healthDescriptor.data)}</td>
+                                </tr>
+                            );
+                        })}
+                        </tbody>
+                    </Table>
+                </Row>
+            </Container>
+        );
+    }
 }
 
 export default DiagnosticsComponent;
