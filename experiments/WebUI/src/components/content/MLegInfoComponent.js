@@ -208,6 +208,9 @@ class MLegInfoComponent
                 form: this.state.form,
             });
             const task = this.props.missionLeg;
+            if (!(type in task)) {
+                task[type] = {};
+            }
             task[type][name] = value;
             if (this.props.onChange) {
                 this.props.onChange(task);

@@ -34,6 +34,9 @@ export default class MissionPolyline
 
     render() {
         const mission = this.context.mission;
+        if (mission === null) {
+            return null;
+        }
         const taskIndex = this.context.taskIndex;
         const points = this.state.points;
         return (
