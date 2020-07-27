@@ -2,16 +2,13 @@ import React from 'react';
 import {Container, Row} from 'react-bootstrap';
 import GaugeDashboard from './GaugeDashboard';
 
-class DashboardComponent extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-
-    }
+class DashboardComponent
+    extends React.Component {
 
     render() {
         return (
             <Container>
-				<Row><h3>Dashboard</h3></Row>
+                <Row><h3>Dashboard</h3></Row>
                 <Row>
                     <GaugeDashboard ref=""/>
                 </Row>

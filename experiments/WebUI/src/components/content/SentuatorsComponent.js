@@ -1,5 +1,5 @@
 import React from 'react'
-import { Col, Row, Container, ListGroup } from 'react-bootstrap';
+import { Row, Container, ListGroup } from 'react-bootstrap';
 import { FjageHelper } from "../../assets/fjageHelper.js";
 import { Management } from "../../assets/jc2.js";
 
@@ -20,8 +20,6 @@ class SentuatorsComponent extends React.Component {
 			sensors: [],
 			sentuatorValue: []
 		};
-
-
 	}
 
 	componentDidMount() {
@@ -48,14 +46,8 @@ class SentuatorsComponent extends React.Component {
 				.catch(reason => {
 					console.log('could not get sentuators', reason);
 				});
-
-
 			}
 		});
-	}
-
-	componentDidUpdate() {
-
 	}
 
 	handleChange = selectedOption => {
@@ -78,7 +70,7 @@ class SentuatorsComponent extends React.Component {
 		this.management.getMeasurement(this.state.selectedOption.value, sentuatorType, 1.0)
 		.then(response => {
 			// console.log(response);
-			if (response != undefined) {
+			if (response) {
 				var value = [];
 				response.items.forEach((item, i) => {
 					value.push(item.type + " : " + item.value);

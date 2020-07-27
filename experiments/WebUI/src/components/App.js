@@ -1,10 +1,8 @@
 import React from 'react';
 import '../assets/App.css';
-import { Gateway, Message, Performative } from '../assets/fjage.js';
-// import {TestRequest} from '../assets/testService';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import { Col, Row, Container, Button } from 'react-bootstrap';
+import { Row, Container, Button } from 'react-bootstrap';
 import { StyleSheet, css } from 'aphrodite';
 import SidebarComponent from './sidebar/SidebarComponent';
 import DashboardComponent from './content/DashboardComponent';
@@ -13,12 +11,8 @@ import MapComponent from './content/MapComponent';
 import ScriptControl from './content/ScriptControl';
 import SentuatorsComponent from './content/SentuatorsComponent';
 
-// import Main from './Main';
-import ToolbarComponent from './ToolbarComponent';
+import { Route, Switch, HashRouter } from 'react-router-dom';
 
-import { Route, Switch, Redirect, HashRouter } from 'react-router-dom';
-
-import menuIcon from '../assets/img/menu.svg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
@@ -46,7 +40,9 @@ const styles = StyleSheet.create({
 
 });
 
-class App extends React.Component {
+class App
+	extends React.Component {
+
 	constructor(props) {
 		super(props);
 

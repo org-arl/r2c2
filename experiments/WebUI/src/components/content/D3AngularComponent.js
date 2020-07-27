@@ -2,9 +2,7 @@ import React from 'react';
 import * as d3 from "d3";
 import '../../assets/gauge.css';
 
-import FrontIcon from '../../assets/img/submarine-front-view.svg';
 import SideIcon from '../../assets/img/submarine-side-view.svg';
-
 
 class D3AngularComponent extends React.Component{
 
@@ -250,7 +248,7 @@ class D3AngularComponent extends React.Component{
 	}
 
 	setTarget(newValue) {
-		const r = this.props.size / 2;
+		//const r = this.props.size / 2;
 
 		const ratio1 = this.scale(newValue);
 		const newAngle1 = this.props.minAngle + (ratio1 * this.range);

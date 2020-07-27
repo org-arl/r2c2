@@ -1,28 +1,13 @@
 import React from 'react';
-import { Row, Container, Button } from 'react-bootstrap';
-import { StyleSheet, css } from 'aphrodite';
+import { Container, Button } from 'react-bootstrap';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
 import ToolbarComponent from '../ToolbarComponent';
 
-const styles = StyleSheet.create({
-    separator: {
-        borderTop: '1px solid #DFE0EB',
-        marginTop: 16,
-        marginBottom: 16,
-        opacity: 0.06
-    }
-});
-
-
-class SidebarComponent extends React.Component{
-
-	constructor(props) {
-		super(props);
-
-	}
+class SidebarComponent
+	extends React.Component{
 
 	toggleNav() {
 		var sidebar = document.getElementById("sidebar");

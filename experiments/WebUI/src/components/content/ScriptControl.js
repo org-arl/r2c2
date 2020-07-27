@@ -4,11 +4,11 @@ import { FjageHelper } from "../../assets/fjageHelper.js";
 import { Management } from "../../assets/jc2.js";
 import { StyleSheet, css } from 'aphrodite';
 
-import { Row, Container, InputGroup, FormControl, Button } from 'react-bootstrap';
+import { Row, Container, Button } from 'react-bootstrap';
 
 import Select from 'react-select';
 
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

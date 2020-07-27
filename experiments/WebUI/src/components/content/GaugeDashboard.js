@@ -7,25 +7,9 @@ import D3AngularComponent from './D3AngularComponent';
 import D3BearingComponent from './D3BearingComponent';
 
 import {FjageHelper} from "../../assets/fjageHelper.js";
-import {Message, Performative} from '../../assets/fjage.js';
 import { Management} from "../../assets/jc2.js";
 
 import FrontIcon from '../../assets/img/submarine-front-view.svg';
-import SideIcon from '../../assets/img/submarine-side-view.svg';
-
-
-class OperatorCmdReq extends Message {
-    constructor(params) {
-        super(new Message(), Performative.REQUEST);
-        this.__clazz__ = 'org.arl.jc2.messages.OperatorCmdReq';
-        if (params) {
-            const keys = Object.keys(params);
-            for (let k of keys) {
-                this[k] = params[k];
-            }
-        }
-    }
-}
 
 class GaugeDashboard extends React.Component {
     constructor(props, context) {
@@ -109,8 +93,6 @@ class GaugeDashboard extends React.Component {
     };
 
     componentDidMount() {
-
-        var captainAgentId = null;
         this.gateway.addConnListener((connected) => {
             if (connected) {
                 this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
