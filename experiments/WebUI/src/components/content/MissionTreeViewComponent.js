@@ -5,9 +5,10 @@ import {Button, ListGroup, Modal} from 'react-bootstrap';
 import MLegInfoComponent from './MLegInfoComponent';
 
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
+import {faPlusCircle, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import MissionViewComponent from "./MissionViewComponent";
 import MissionPlannerContext from "./MissionPlanner";
+import {toast, ToastContainer} from "react-toastify";
 
 const styles = StyleSheet.create({
     missionsContainer: {
@@ -54,6 +55,7 @@ class MissionTreeViewComponent
                     <ul>
                         {this.state.missions.map((mission, index) => {
                             const isSelected = (this.context.missionIndex === index);
+                            const isNew = mission.createdAt;
                             const isModified = mission.updatedAt;
                             return (
                                 <ListGroup.Item key={index}>
@@ -69,7 +71,7 @@ class MissionTreeViewComponent
                                                              onClick={(e) => this._onSaveChangesRequested(e, mission, index)}
                                                              title="Save changes"/>
                                         )}
-                                        {isModified && (
+                                        {isModified && !isNew && (
                                             <FontAwesomeIcon className="discardChangesBtn"
                                                              icon={faTimes}
                                                              onClick={(e) => this._onDiscardChangesRequested(e, mission, index)}
@@ -86,11 +88,10 @@ class MissionTreeViewComponent
                                 </ListGroup.Item>
                             );
                         })}
-                        <ListGroup.Item
-                            onClick={() => this.addNewMission()}
-                            key="newMission"
-                            className="addMissionBtn">
-                            +
+                        <ListGroup.Item onClick={(e) => this._onAddMission(e)}
+                                        key="newMission"
+                                        className="addMissionBtn">
+                            <FontAwesomeIcon icon={faPlusCircle} title="New mission"/>
                         </ListGroup.Item>
                     </ul>
                 </div>
@@ -163,6 +164,8 @@ class MissionTreeViewComponent
                         </Button>
                     </Modal.Footer>
                 </Modal>
+
+                <ToastContainer/>
             </div>
         );
     }
@@ -190,6 +193,57 @@ class MissionTreeViewComponent
         this.context.mission = {...mission};
     }
 
+    _onSaveChangesRequested(e, mission, index) {
+        e.stopPropagation();
+
+        if (!this.context.mission.updatedAt) {
+            return;
+        }
+
+        this.setState({
+            showSaveChangesDialog: true,
+            saveChangesMissionIndex: index,
+        });
+    }
+
+    _onSaveChangesConfirmed(e) {
+        const index = this.state.saveChangesMissionIndex;
+
+        this.setState({
+            showSaveChangesDialog: false,
+            saveChangesMissionIndex: -1,
+        });
+
+        const missions = this.state.missions;
+        const mission = missions[index];
+        delete (mission.updatedAt);
+        this.props.management.updateMission(mission, index)
+            .then(response => {
+                console.log(response);
+                toast.success('Changes to mission #' + (index + 1) + ' saved.');
+
+                this.setState({
+                    missions: [...missions],
+                });
+                this.context.mission = mission;
+                this.context.task = null;
+                this.context.taskIndex = -1;
+
+                // TODO propagate change
+            })
+            .catch(reason => {
+                console.log('Error: could not save mission', reason);
+                toast.error('Failed to save changes to mission #' + (index + 1) + '.');
+            });
+    }
+
+    _onSaveChangesCancelled(e) {
+        this.setState({
+            showSaveChangesDialog: false,
+            saveChangesMissionIndex: -1,
+        });
+    }
+
     _onDiscardChangesRequested(e, mission, index) {
         e.stopPropagation();
 
@@ -215,41 +269,14 @@ class MissionTreeViewComponent
         this.context.mission = clonedOriginalMission;
         this.context.task = null;
         this.context.taskIndex = -1;
+
+        toast.success('Changes to mission #' + (index + 1) + ' discarded.');
     }
 
     _onDiscardChangesCancelled(e) {
         this.setState({
             showDiscardChangesDialog: false,
             discardChangesMissionIndex: -1,
-        });
-    }
-
-    _onSaveChangesRequested(e, mission, index) {
-        e.stopPropagation();
-
-        if (!this.context.mission.updatedAt) {
-            return;
-        }
-
-        this.setState({
-            showSaveChangesDialog: true,
-            saveChangesMissionIndex: index,
-        });
-    }
-
-    _onSaveChangesConfirmed(e) {
-        this.setState({
-            showSaveChangesDialog: false,
-            saveChangesMissionIndex: -1,
-        });
-
-        // TODO
-    }
-
-    _onSaveChangesCancelled(e) {
-        this.setState({
-            showSaveChangesDialog: false,
-            saveChangesMissionIndex: -1,
         });
     }
 
@@ -263,12 +290,46 @@ class MissionTreeViewComponent
     }
 
     _onDeleteMissionConfirmed(e) {
+        const index = this.state.deleteMissionIndex;
+
         this.setState({
             showDeleteMissionDialog: false,
             deleteMissionIndex: -1,
         });
 
-        // TODO
+        const missions = this.state.missions;
+        const mission = this.state.missions[index];
+        if (mission.createdAt) {
+            missions.splice(index, 1);
+            this.setState({
+                missions: [...missions],
+            });
+            this.context.mission = null;
+            this.context.missionIndex = -1;
+            this.context.task = null;
+            this.context.taskIndex = -1;
+        } else {
+            this.props.management.deleteMission(index)
+                .then(response => {
+                    console.log(response);
+                    toast.success('Mission #' + (index + 1) + ' deleted.');
+
+                    missions.splice(index, 1);
+                    this.setState({
+                        missions: [...missions],
+                    });
+                    this.context.mission = null;
+                    this.context.missionIndex = -1;
+                    this.context.task = null;
+                    this.context.taskIndex = -1;
+
+                    // TODO propagate change
+                })
+                .catch(reason => {
+                    console.log('Error: could not delete mission', reason);
+                    toast.error('Failed to delete mission #' + (index + 1) + '.');
+                });
+        }
     }
 
     _onDeleteMissionCancelled(e) {
@@ -278,34 +339,21 @@ class MissionTreeViewComponent
         });
     }
 
-    // ----
-
-    addNewMission(e) {
-        console.log("add new mission");
-        var missionsArr = this.state.missions;
-        if (missionsArr === null) {
-            missionsArr = [];
-        }
-
-        missionsArr.push([]);
-
+    _onAddMission(e) {
+        const mission = {
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            tasks: [],
+        };
+        const missions = this.state.missions;
+        missions.push(mission);
         this.setState({
-            missions: missionsArr,
-            selectedMLeg: 0
+            missions: [...missions],
         });
-        this.props.viewMissionFunc(missionsArr.length - 1);
-    }
-
-    saveChanges(missionNumber) {
-        console.log("Saving changes for Mission " + missionNumber);
-
-        this.props.management.updateMission(this.state.missions[missionNumber - 1], missionNumber)
-            .then(response => {
-                console.log(response);
-            })
-            .catch(reason => {
-                console.log('Error: could not save mission to the vehicle', reason);
-            });
+        this.context.mission = mission;
+        this.context.missionIndex = missions.length - 1;
+        this.context.task = null;
+        this.context.taskIndex = -1;
     }
 
     _clone(o) {

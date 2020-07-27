@@ -144,6 +144,8 @@ export class Management {
 	/**
      * Updates a mission.
      *
+     * @param updatedMissionDefinition {Object} Updated mission definition.
+     * @param missionNumber {int} Mission number (0-based).
      * @returns {Promise<String>}
      */
     updateMission(updatedMissionDefinition, missionNumber) {
@@ -152,7 +154,33 @@ export class Management {
                 return new Promise((resolve, reject) => {
                     const request = new UpdateMissionReq({
                         recipient: this._managementAgentId,
-                        mission: updatedMissionDefinition,
+                        missionDefinition: updatedMissionDefinition,
+                        missionNumber: missionNumber
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.perf);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+    /**
+     * Deletes a mission.
+     *
+     * @param missionNumber {int} Mission number (0-based).
+     * @returns {Promise<String>}
+     */
+    deleteMission(missionNumber) {
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new DeleteMissionReq({
+                        recipient: this._managementAgentId,
                         missionNumber: missionNumber
                     });
                     this._gateway.request(request)
@@ -631,5 +659,17 @@ export class UpdateMissionReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.UpdateMissionReq', params);
+    }
+}
+
+export class DeleteMissionReq extends AbstractRequest {
+
+    /**
+     * Constructs a DeleteMissionReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.DeleteMissionReq', params);
     }
 }
