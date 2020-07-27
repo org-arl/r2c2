@@ -4,7 +4,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Group, Line} from "pts";
 
-import CustomReactComponent, {SECTION_CONTEXT, SECTION_STATE} from "./CustomReactComponent";
+import CustomReactComponent, {SECTION_CONTEXT} from "./CustomReactComponent";
 import StarfishMissions from "../../lib/StarfishMissions";
 import MissionPlannerContext from "./MissionPlanner";
 

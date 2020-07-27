@@ -349,15 +349,18 @@ class MapComponent
                         </Button>
                         <Button active={this.state.displayGeoFence}
                                 onClick={(e) => this._onToggleGeoFence(e)}>
-                            <img title="Toggle geofence" src={fenceIcon} height={20} width={20}/>
+                            <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
+                                 alt="Toggle geofence"/>
                         </Button>
                         <Button active={this.state.displayMissionPts}
                                 onClick={(e) => this._onToggleMissionPts(e)}>
-                            <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}/>
+                            <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
+                                 alt="Toggle mission points"/>
                         </Button>
                         <Button active={this.state.displayVehiclePath}
                                 onClick={(e) => this._onToggleVehiclePath(e)}>
-                            <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}/>
+                            <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
+                                 alt="Toggle vehicle path"/>
                         </Button>
 
                         <div className="mission_options">
