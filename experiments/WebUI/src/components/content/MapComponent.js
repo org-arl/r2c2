@@ -35,6 +35,7 @@ import MissionPlannerMapElement from "./MissionPlannerMapElement";
 import MissionPlannerMissionsComponent from "./MissionPlannerMissionsComponent";
 import '../../assets/MissionPlanner.css';
 import VehicleMapElement from "./VehicleMapElement";
+import GeoFenceMapElement from "./GeoFenceMapElement";
 
 console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
 
@@ -95,7 +96,10 @@ class MapComponent
             zoom: 15,
             origin: origin,
             mapBoundaries: mapBoundaries,
-            geoFenceCoordinates: [],
+
+            geoFenceLocal: [],
+            geoFenceGlobal: [],
+
             vehicleTrail: [],
             pathLimit: 1000,
 
@@ -169,6 +173,20 @@ class MapComponent
 
                 this.management = new Management(this.gateway);
 
+                this.management.getOrigin()
+                    .then(response => {
+                        this.setState({
+                            origin: {
+                                latitude: response.latitude,
+                                longitude: response.longitude
+                            },
+                        });
+                        this.coordSys.updateOrigin(this.state.origin.latitude, this.state.origin.longitude);
+                    })
+                    .catch(reason => {
+                        console.log('could not get origin', reason);
+                    });
+
                 this.management.getVehicleId()
                     .then(vehicleId => {
                         console.log('vehicleId', vehicleId);
@@ -191,32 +209,9 @@ class MapComponent
                         console.log('could not get missions', reason);
                     });
 
-                this.management.getOrigin()
-                    .then(response => {
-                        this.setState({
-                            origin: {
-                                latitude: response.latitude,
-                                longitude: response.longitude
-                            },
-                            vehicleTrail: []
-                        });
-                        this.coordSys.updateOrigin(this.state.origin.latitude, this.state.origin.longitude);
-                    })
-                    .catch(reason => {
-                        console.log('could not get origin', reason);
-                    });
-
                 this.management.getGeofence()
                     .then(response => {
-                        const geoFenceCoordinates = response
-                            .map((element) => [this.coordSys.locy2lat(element.y), this.coordSys.locx2long(element.x)]);
-                        this._setMapBoundaries([
-                            ...geoFenceCoordinates,
-                            [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude],
-                        ]);
-                        this.setState({
-                            geoFenceCoordinates: geoFenceCoordinates,
-                        });
+                        this._updateGeoFence(response);
                     })
                     .catch(reason => {
                         console.log('could not get geofence', reason);
@@ -278,9 +273,7 @@ class MapComponent
                     />
 
                     {(inNormalMode || inMissionPlanner) && this.state.displayGeoFence && (
-                        <LayerGroup id="geofence">
-                            <Polygon positions={this.state.geoFenceCoordinates} color="red"/>
-                        </LayerGroup>
+                        <GeoFenceMapElement points={this.state.geoFenceLocal} coordSys={this.coordSys} color="red"/>
                     )}
 
                     {inGeofenceEditor && (
@@ -467,7 +460,7 @@ class MapComponent
     _onToggleGeofenceEditor(e) {
         this.setState({
             mode: (this.state.mode !== MODE_GEOFENCE_EDITOR) ? MODE_GEOFENCE_EDITOR : MODE_NONE,
-            drawGeoFence: this.state.geoFenceCoordinates
+            drawGeoFence: this.state.geoFenceGlobal
         })
     }
 
@@ -485,7 +478,7 @@ class MapComponent
             .then(response => {
                 this.setState({
                     mode: MODE_NONE,
-                    geoFenceCoordinates: this.state.drawGeoFence,
+                    geoFenceGlobal: this.state.drawGeoFence,
                 });
             })
             .catch(reason => {
@@ -641,8 +634,8 @@ class MapComponent
     // ---- map controls ----
 
     _onRecentreMap(e) {
-        this._setMapBoundaries([
-            ...this.state.geoFenceCoordinates,
+        this._setMapBounds([
+            ...this.state.geoFenceGlobal,
             [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude],
         ]);
     }
@@ -684,7 +677,66 @@ class MapComponent
 
     // ---- map methods ----
 
-    _setMapBoundaries(coords) {
+    _getBounds(points) {
+        if (!points || (points.length === 0)) {
+            return null;
+        }
+        const defaultPoint = [];
+        for (let j = 0; j < 2; j++) {
+            defaultPoint.push(points[0][j]);
+        }
+        const minArray = [...defaultPoint];
+        const maxArray = [...defaultPoint];
+        for (let i = 1; i < points.length; i++) {
+            const point = points[i];
+            for (let j = 0; j < 2; j++) {
+                const value = point[j];
+                if (value < minArray[j]) {
+                    minArray[j] = value;
+                } else if (value > maxArray[j]) {
+                    maxArray[j] = value;
+                }
+            }
+        }
+        return [minArray, maxArray];
+    }
+
+    _updateGeoFence(geoFenceLocal) {
+        const localBounds = this._getBounds(geoFenceLocal.map(point => [point.x, point.y,]));
+
+        const geoFenceGlobal = geoFenceLocal.map(point => [
+            this.coordSys.locy2lat(point.y),
+            this.coordSys.locx2long(point.x),
+        ]);
+
+        const globalBounds = localBounds
+            ? [
+                [
+                    this.coordSys.locy2lat(localBounds[0][1]),
+                    this.coordSys.locx2long(localBounds[0][0]),
+                ],
+                [
+                    this.coordSys.locy2lat(localBounds[1][1]),
+                    this.coordSys.locx2long(localBounds[1][0]),
+                ],
+            ]
+            : [];
+
+        this._setMapBounds([
+            ...globalBounds,
+            [this.state.vehiclePosition.latitude, this.state.vehiclePosition.longitude],
+        ]);
+        this.setState({
+            geoFenceLocal: geoFenceLocal,
+            geoFenceGlobal: geoFenceGlobal,
+        });
+    }
+
+    _setMapBoundsFromLocal(points) {
+
+    }
+
+    _setMapBounds(coords) {
         const mapBoundaries = this._determineMapBoundaries(coords);
         this.setState({
             mapBoundaries: mapBoundaries,
