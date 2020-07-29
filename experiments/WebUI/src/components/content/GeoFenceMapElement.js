@@ -12,7 +12,6 @@ class GeoFenceMapElement
 
         this.state = {
             positions: this._toPositions(props.points),
-            color: props.color,
         };
     }
 
@@ -22,17 +21,12 @@ class GeoFenceMapElement
                 positions: this._toPositions(this.props.points),
             });
         }
-        if (this.props.color !== prevProps.color) {
-            this.setState({
-                color: this.props.color,
-            });
-        }
     }
 
     render() {
         return (
             <LayerGroup>
-                <Polygon positions={this.state.positions} color={this.state.color}/>
+                <Polygon positions={this.state.positions} color={this.props.color}/>
             </LayerGroup>
         );
     }
