@@ -38,9 +38,10 @@ class GeoFenceEditorMapElement
                         const y = coordSys.lat2locy(lat);
                         const onDrag = function (e) {
                             if (e.latlng) {
-                                this.state.positions[index] = [e.latlng.lat, e.latlng.lng];
+                                const positions = this.state.positions;
+                                positions[index] = [e.latlng.lat, e.latlng.lng];
                                 this.setState({
-                                    positions: [...this.state.positions],
+                                    positions: [...positions],
                                 });
                             }
                         }.bind(this);
