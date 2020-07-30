@@ -1,6 +1,6 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polygon, Popup} from "react-leaflet";
-import {mapPin} from "../../assets/MapIcons";
+import {mapPin, mapPinSelected} from "../../assets/MapIcons";
 import CoordSysContext from "./CoordSysContext";
 
 /**
@@ -18,6 +18,7 @@ class GeoFenceEditorMapElement
         this.state = {
             positions: positions,
             editStack: [this._clonePositions(positions)],
+            selectedIndex: -1,
         };
     }
 
@@ -32,10 +33,17 @@ class GeoFenceEditorMapElement
                          color={this.props.color}/>
                 {this.state.positions.map(
                     (position, index) => {
+                        const selected = (this.state.selectedIndex === index);
                         const lat = position[0];
                         const long = position[1];
                         const x = coordSys.long2locx(long);
                         const y = coordSys.lat2locy(lat);
+                        const onClick = function (e) {
+                            this.setState({
+                                selectedIndex: index,
+                            });
+                            console.log('selected', index);
+                        }.bind(this);
                         const onDrag = function (e) {
                             if (e.latlng) {
                                 const positions = this.state.positions;
@@ -49,15 +57,12 @@ class GeoFenceEditorMapElement
                             onDrag(e);
                             this._pushToEditStack();
                         }.bind(this);
-                        const onContextMenu = function (e) {
-                            // TODO
-                        }.bind(this);
                         return (
                             <Marker draggable={true}
+                                    onClick={onClick}
                                     onDrag={onDrag}
                                     onDragEnd={onDragEnd}
-                                    onContextMenu={onContextMenu}
-                                    icon={mapPin}
+                                    icon={selected ? mapPinSelected : mapPin}
                                     key={index}
                                     position={position}>
                                 <Popup>
@@ -86,6 +91,18 @@ class GeoFenceEditorMapElement
         });
     }
 
+    deleteSelectedPoint() {
+        if (this.state.selectedIndex >= 0) {
+            const positions = this.state.positions;
+            positions.splice(this.state.selectedIndex, 1);
+            this.setState({
+                positions: [...positions],
+                selectedIndex: -1,
+            });
+            this._pushToEditStack();
+        }
+    }
+
     undo() {
         if (!this.state.editStack || (this.state.editStack.length < 2)) {
             return;
@@ -95,6 +112,7 @@ class GeoFenceEditorMapElement
         const oldPositions = this._clonePositions(editStack[editStack.length - 1]);
         this.setState({
             positions: oldPositions,
+            selectedIndex: -1,
             editStack: [...editStack],
         });
     }
@@ -105,6 +123,7 @@ class GeoFenceEditorMapElement
         }
         this.setState({
             positions: [],
+            selectedIndex: -1,
             editStack: [...this.state.editStack, []],
         });
     }
@@ -118,31 +137,6 @@ class GeoFenceEditorMapElement
         this.setState({
             editStack: [...this.state.editStack, this._clonePositions(this.state.positions)],
         });
-    }
-
-    _checkCollinear(points, point) {
-        // epsilon accounts for the error in checking if a point is collinear.
-        // Larger epsilon will result in wider range of points getting accepted as collinear
-        // (even those that lie further from the line segment).
-        const epsilon = 0.0000005;
-        for (let i = 0; i < points.length; i++) {
-            const point1 = points[i];
-            const point2 = points[(i + 1) % points.length];
-            const crossProduct = ((point[1] - point1[1]) * (point2[0] - point1[0]))
-                - ((point[0] - point1[0]) * (point2[1] - point1[1]));
-            if (Math.abs(crossProduct) < epsilon) {
-                const dotProduct = ((point[0] - point1[0]) * (point2[0] - point1[0]))
-                    + ((point[1] - point1[1]) * (point2[1] - point1[1]));
-                if (dotProduct >= 0) {
-                    const squaredLength = ((point2[0] - point1[0]) * (point2[0] - point1[0]))
-                        + ((point2[1] - point1[1]) * (point2[1] - point1[1]));
-                    if (dotProduct <= squaredLength) {
-                        return i; // returns index on first match
-                    }
-                }
-            }
-        }
-        return -1; //if not collinear
     }
 
     _toPositions(points) {

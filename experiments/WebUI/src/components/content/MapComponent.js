@@ -9,7 +9,8 @@ import {
     faSave,
     faTrashAlt,
     faUndo,
-    faWindowClose
+    faWindowClose,
+    faMinusCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import {Button, Container, Row} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
@@ -363,6 +364,10 @@ class MapComponent
                                                 onClick={(e) => this._onGeoFenceEditorCancel(e)}>
                                             <FontAwesomeIcon icon={faWindowClose} color="#fff"/>
                                         </Button>
+                                        <Button title="Delete point"
+                                                onClick={(e) => this._onGeoFenceEditorDeletePoint(e)}>
+                                            <FontAwesomeIcon icon={faMinusCircle} color="#fff"/>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -493,6 +498,12 @@ class MapComponent
     _onGeoFenceEditorClear(e) {
         if (this.geoFenceEditorRef.current) {
             this.geoFenceEditorRef.current.clear();
+        }
+    }
+
+    _onGeoFenceEditorDeletePoint(e) {
+        if (this.geoFenceEditorRef.current) {
+            this.geoFenceEditorRef.current.deleteSelectedPoint();
         }
     }
 
