@@ -11,7 +11,7 @@ import {
     faUndo,
     faWindowClose,
 } from '@fortawesome/free-solid-svg-icons'
-import {Button, Container, Row} from 'react-bootstrap';
+import {Button, ButtonGroup, ButtonToolbar, Container, Row} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
 
 import {toast} from 'react-toastify';
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         zIndex: "1000",
         marginTop: "10px",
-        marginLeft: "60px"
+        marginLeft: "48px"
     }
 });
 
@@ -285,94 +285,104 @@ class MapComponent
 
                     <Container className={css(styles.map_options_styles)}>
                         <Row>
-                            <ToolbarComponent onClick={(item) => {
-                                this._openNewWindow(item)
-                            }}/>
-                            <div className="dropdown_styles">
-                                <Button>Missions</Button>
-                                <div className="dropdown_content">
-                                    {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => {
-                                        return (
-                                            <div key={index}>
-                                                {index + 1}
-                                                &nbsp;
-                                                <Button
-                                                    onClick={(e) => this._onViewMission(mission, index)}>View</Button>
-                                                &nbsp;
-                                                <Button onClick={(e) => this._onRunMission(mission, index)}>Run</Button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <ButtonToolbar>
+                                <ButtonGroup className="map-button-group">
+                                    <ToolbarComponent onClick={(item) => {
+                                        this._openNewWindow(item)
+                                    }}/>
+                                    <Button onClick={(e) => this._onCloseAllChildWindows(e)}>
+                                        <FontAwesomeIcon icon={faWindowClose} title="Close all child windows"/>
+                                    </Button>
+                                </ButtonGroup>
 
-                            <Button onClick={(e) => this._onCloseAllChildWindows(e)}>
-                                <FontAwesomeIcon icon={faWindowClose} title="Close all child windows"/>
-                            </Button>
-
-                            <Button onClick={(e) => this._onRecentreMap(e)}>
-                                <FontAwesomeIcon icon={faCrosshairs} title="Re-center map"/>
-                            </Button>
-                            <Button active={this.state.displayGeoFence}
-                                    onClick={(e) => this._onToggleGeoFence(e)}>
-                                <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
-                                     alt="Toggle geofence"/>
-                            </Button>
-                            <Button active={this.state.displayMission}
-                                    onClick={(e) => this._onToggleMission(e)}>
-                                <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
-                                     alt="Toggle mission points"/>
-                            </Button>
-                            <Button active={this.state.displayVehiclePath}
-                                    onClick={(e) => this._onToggleVehiclePath(e)}>
-                                <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
-                                     alt="Toggle vehicle path"/>
-                            </Button>
-
-                            <div className="mission_options">
-                                <Button onClick={(e) => this._onAbortMission(e)}>
-                                    <FontAwesomeIcon icon={faBan} title="Abort mission"/>
-                                </Button>
-                                <Button onClick={(e) => this._onStationKeep(e)}>
-                                    <FontAwesomeIcon icon={faSatellite} title="Station-keep"/>
-                                </Button>
-                                <Button onClick={(e) => this._onGoHome(e)}>
-                                    <FontAwesomeIcon icon={faHome} title="Go home"/>
-                                </Button>
-                            </div>
-
-                            <div className="drawGeoFence_styles">
-                                <Button onClick={(e) => this._onToggleGeofenceEditor(e)}>
-                                    Draw GeoFence
-                                </Button>
-                                {inGeofenceEditor && (
-                                    <div className="drawGeoFence_content">
-                                        <Button title="Undo"
-                                                onClick={(e) => this._onGeoFenceEditorUndo(e)}>
-                                            <FontAwesomeIcon icon={faUndo} color="#fff"/>
-                                        </Button>
-                                        <Button title="Clear"
-                                                onClick={(e) => this._onGeoFenceEditorClear(e)}>
-                                            <FontAwesomeIcon icon={faTrashAlt} color="#fff"/>
-                                        </Button>
-                                        <Button title="Save"
-                                                onClick={(e) => this._onGeoFenceEditorSave(e)}>
-                                            <FontAwesomeIcon icon={faSave} color="#fff"/>
-                                        </Button>
-                                        <Button title="Cancel"
-                                                onClick={(e) => this._onGeoFenceEditorCancel(e)}>
-                                            <FontAwesomeIcon icon={faWindowClose} color="#fff"/>
-                                        </Button>
+                                <ButtonGroup className="map-button-group">
+                                    <div className="dropdown_styles">
+                                        <Button>Missions</Button>
+                                        <div className="dropdown_content">
+                                            {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => {
+                                                return (
+                                                    <div key={index}>
+                                                        #{index + 1}
+                                                        &nbsp;
+                                                        <Button
+                                                            onClick={(e) => this._onViewMission(mission, index)}>View</Button>
+                                                        &nbsp;
+                                                        <Button disabled={!inNormalMode}
+                                                                onClick={(e) => this._onRunMission(mission, index)}>Run</Button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                </ButtonGroup>
 
-                            <div>
-                                <Button active={inMissionPlanner}
-                                        onClick={(e) => this._onToggleMissionPlanner(e)}>
-                                    MissionPlanner
-                                </Button>
-                            </div>
+                                <ButtonGroup className="map-button-group">
+                                    <Button onClick={(e) => this._onRecentreMap(e)}>
+                                        <FontAwesomeIcon icon={faCrosshairs} title="Re-center map"/>
+                                    </Button>
+                                    <Button active={this.state.displayGeoFence}
+                                            onClick={(e) => this._onToggleGeoFence(e)}>
+                                        <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
+                                             alt="Toggle geofence"/>
+                                    </Button>
+                                    <Button active={this.state.displayMission}
+                                            onClick={(e) => this._onToggleMission(e)}>
+                                        <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
+                                             alt="Toggle mission points"/>
+                                    </Button>
+                                    <Button active={this.state.displayVehiclePath}
+                                            onClick={(e) => this._onToggleVehiclePath(e)}>
+                                        <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
+                                             alt="Toggle vehicle path"/>
+                                    </Button>
+                                </ButtonGroup>
+
+                                <ButtonGroup className="map-button-group">
+                                    <Button onClick={(e) => this._onAbortMission(e)}>
+                                        <FontAwesomeIcon icon={faBan} title="Abort mission"/>
+                                    </Button>
+                                    <Button onClick={(e) => this._onStationKeep(e)}>
+                                        <FontAwesomeIcon icon={faSatellite} title="Station-keep"/>
+                                    </Button>
+                                    <Button onClick={(e) => this._onGoHome(e)}>
+                                        <FontAwesomeIcon icon={faHome} title="Go home"/>
+                                    </Button>
+                                </ButtonGroup>
+
+                                <ButtonGroup className="map-button-group">
+                                    <div className="drawGeoFence_styles">
+                                        <Button onClick={(e) => this._onToggleGeofenceEditor(e)}>
+                                            Edit geofence
+                                        </Button>
+                                        {inGeofenceEditor && (
+                                            <div className="drawGeoFence_content">
+                                                <ButtonToolbar>
+                                                    <Button onClick={(e) => this._onGeoFenceEditorUndo(e)}>
+                                                        <FontAwesomeIcon icon={faUndo} color="#fff" title="Undo"/>
+                                                    </Button>
+                                                    <Button onClick={(e) => this._onGeoFenceEditorClear(e)}>
+                                                        <FontAwesomeIcon icon={faTrashAlt} color="#fff" title="Clear"/>
+                                                    </Button>
+                                                    <Button onClick={(e) => this._onGeoFenceEditorSave(e)}>
+                                                        <FontAwesomeIcon icon={faSave} color="#fff" title="Save"/>
+                                                    </Button>
+                                                    <Button onClick={(e) => this._onGeoFenceEditorCancel(e)}>
+                                                        <FontAwesomeIcon icon={faWindowClose} color="#fff"
+                                                                         title="Cancel"/>
+                                                    </Button>
+                                                </ButtonToolbar>
+                                            </div>
+                                        )}
+                                    </div>
+                                </ButtonGroup>
+
+                                <ButtonGroup className="map-button-group">
+                                    <Button active={inMissionPlanner}
+                                            onClick={(e) => this._onToggleMissionPlanner(e)}>
+                                        Mission Planner
+                                    </Button>
+                                </ButtonGroup>
+                            </ButtonToolbar>
                         </Row>
 
                         {inMissionPlanner && (

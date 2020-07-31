@@ -123,7 +123,6 @@
 .dropdown_styles{
 	position: relative;
 	display: inline-block;
-	margin-left: 15px;
 }
 
 .dropdown_content{
@@ -150,6 +149,10 @@
 
 .dropdown_styles:hover .dropdown_content {display: block;}
 
+.map-button-group {
+    margin-left: 15px;
+}
+
 .mission_options{
 	margin-left: 15px;
 }
@@ -157,7 +160,6 @@
 .drawGeoFence_styles{
 	position: relative;
 	display: inline-block;
-	margin-left: 15px;
 }
 
 .drawGeoFence_content{
