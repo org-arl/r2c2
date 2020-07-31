@@ -617,16 +617,11 @@ class MapComponent
     }
 
     _onRunMission(mission, index) {
-        // TODO handle edited missions
-        /**
-         if (this.state.editedMissions[index] === 1) {
-            alert("Error: Unsaved Changes. Save mission to vehicle before running.");
-            return;
-        }
-         */
+        // TODO Handle edited missions
         this._onViewMission(mission, index);
-        // TODO should there be some response to check if mission has been run?
         this.management.runMission(index + 1);
+        // TODO Currently there is no response from JC2
+        toast.info("Run mission #" + (index + 1) + " requested.", TOAST_AUTOCLOSE);
     }
 
     // ---- map controls ----
@@ -658,16 +653,22 @@ class MapComponent
     _onAbortMission(e) {
         console.log("Abort Mission!");
         this.management.abortMission();
+        // TODO Currently there is no response from JC2
+        toast.info("Abort mission requested.", TOAST_AUTOCLOSE);
     }
 
     _onStationKeep(e) {
         console.log("Station Keep!");
         this.management.stationKeep();
+        // TODO Currently there is no response from JC2
+        toast.info("Station keep requested.", TOAST_AUTOCLOSE);
     }
 
     _onGoHome(e) {
         console.log("Go Home!");
         this.management.abortToHome();
+        // TODO Currently there is no response from JC2
+        toast.info("Abort to home requested.", TOAST_AUTOCLOSE);
     }
 
     // ---- map methods ----
