@@ -104,9 +104,6 @@ class MapComponent
             displayGeoFence: true,
             displayMission: true,
 
-
-            drawGeoFence: [],
-
             missionPlannerContext: {
                 coordSys: null,
                 missionIndex: -1,
