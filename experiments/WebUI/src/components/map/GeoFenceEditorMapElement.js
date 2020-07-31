@@ -1,7 +1,10 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polygon, Popup} from "react-leaflet";
-import {mapPin, mapPinSelected} from "../../assets/MapIcons";
+import {mapPin} from "../../assets/MapIcons";
 import CoordSysContext from "./CoordSysContext";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "react-bootstrap";
 
 /**
  * Props: id, points, color
@@ -18,7 +21,6 @@ class GeoFenceEditorMapElement
         this.state = {
             positions: positions,
             editStack: [this._clonePositions(positions)],
-            selectedIndex: -1,
         };
     }
 
@@ -33,17 +35,10 @@ class GeoFenceEditorMapElement
                          color={this.props.color}/>
                 {this.state.positions.map(
                     (position, index) => {
-                        const selected = (this.state.selectedIndex === index);
                         const lat = position[0];
                         const long = position[1];
                         const x = coordSys.long2locx(long);
                         const y = coordSys.lat2locy(lat);
-                        const onClick = function (e) {
-                            this.setState({
-                                selectedIndex: index,
-                            });
-                            console.log('selected', index);
-                        }.bind(this);
                         const onDrag = function (e) {
                             if (e.latlng) {
                                 const positions = this.state.positions;
@@ -55,20 +50,35 @@ class GeoFenceEditorMapElement
                         }.bind(this);
                         const onDragEnd = function (e) {
                             onDrag(e);
-                            this._pushToEditStack();
+                            this.setState({
+                                editStack: [...this.state.editStack, this._clonePositions(this.state.positions)],
+                            });
+                        }.bind(this);
+                        const onDeletePoint = function (e) {
+                            this._deletePoint(index);
                         }.bind(this);
                         return (
                             <Marker draggable={true}
-                                    onClick={onClick}
                                     onDrag={onDrag}
                                     onDragEnd={onDragEnd}
-                                    icon={selected ? mapPinSelected : mapPin}
+                                    icon={mapPin}
                                     key={index}
                                     position={position}>
                                 <Popup>
-                                    <span>Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)}</span>
-                                    <br/>
-                                    <span>x: {x.toFixed(2)}, y: {y.toFixed(2)}</span>
+                                    <div>
+                                        <span>Lat: {lat.toFixed(4)}, Long: {long.toFixed(4)}</span>
+                                    </div>
+                                    <div>
+                                        <span>x: {x.toFixed(2)}, y: {y.toFixed(2)}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <Button size="sm"
+                                                variant="danger"
+                                                title="Delete point"
+                                                onClick={onDeletePoint}>
+                                            <FontAwesomeIcon icon={faTrashAlt} color="#fff"/>
+                                        </Button>
+                                    </div>
                                 </Popup>
                             </Marker>
                         )
@@ -91,18 +101,6 @@ class GeoFenceEditorMapElement
         });
     }
 
-    deleteSelectedPoint() {
-        if (this.state.selectedIndex >= 0) {
-            const positions = this.state.positions;
-            positions.splice(this.state.selectedIndex, 1);
-            this.setState({
-                positions: [...positions],
-                selectedIndex: -1,
-            });
-            this._pushToEditStack();
-        }
-    }
-
     undo() {
         if (!this.state.editStack || (this.state.editStack.length < 2)) {
             return;
@@ -112,7 +110,6 @@ class GeoFenceEditorMapElement
         const oldPositions = this._clonePositions(editStack[editStack.length - 1]);
         this.setState({
             positions: oldPositions,
-            selectedIndex: -1,
             editStack: [...editStack],
         });
     }
@@ -123,19 +120,55 @@ class GeoFenceEditorMapElement
         }
         this.setState({
             positions: [],
-            selectedIndex: -1,
             editStack: [...this.state.editStack, []],
         });
     }
 
     handleEvent(e) {
-        // TODO
-        console.log(e);
+        const newPosition = [e.latlng.lat, e.latlng.lng];
+        const positions = this.state.positions ? this.state.positions : [];
+        if (positions.length < 3) {
+            positions.push(newPosition);
+        } else {
+            const index = this._findNearestLine(newPosition);
+            positions.splice(index + 1, 0, newPosition);
+        }
+        this.setState({
+            positions: [...positions],
+            editStack: [...this.state.editStack, this._clonePositions(positions)],
+        });
     }
 
-    _pushToEditStack() {
+    _findNearestLine(position) {
+        const positions = this.state.positions;
+        let matchedIndex = -1;
+        let matchedDistanceSquared = NaN;
+        for (let i = 0; i < positions.length; i++) {
+            const index1 = i;
+            const index2 = ((i + 1) % positions.length);
+            const position1 = positions[index1];
+            const position2 = positions[index2];
+            const midPoint = [(position1[0] + position2[0]) / 2, (position1[1] + position2[1]) / 2];
+            const d0 = midPoint[0] - position[0];
+            const d1 = midPoint[1] - position[1];
+            const distanceSquared = (d0 * d0) + (d1 * d1);
+            if (isNaN(matchedDistanceSquared) || (distanceSquared < matchedDistanceSquared)) {
+                matchedIndex = i;
+                matchedDistanceSquared = distanceSquared;
+            }
+        }
+        return matchedIndex;
+    }
+
+    _deletePoint(index) {
+        const positions = this.state.positions;
+        if (!positions || (index < 0) || (index >= positions.length)) {
+            return;
+        }
+        positions.splice(index, 1);
         this.setState({
-            editStack: [...this.state.editStack, this._clonePositions(this.state.positions)],
+            positions: [...positions],
+            editStack: [...this.state.editStack, this._clonePositions(positions)],
         });
     }
 
