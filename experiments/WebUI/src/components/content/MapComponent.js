@@ -5,13 +5,16 @@ import {
     faBan,
     faCrosshairs,
     faHome,
+    faPlus,
+    faQuestion,
     faSatellite,
     faSave,
+    faTimes,
     faTrashAlt,
     faUndo,
     faWindowClose,
 } from '@fortawesome/free-solid-svg-icons'
-import {Button, ButtonGroup, ButtonToolbar, Card} from 'react-bootstrap';
+import {Button, ButtonGroup, ButtonToolbar, Card, Navbar, OverlayTrigger, Popover} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
 
 import {toast} from 'react-toastify';
@@ -28,8 +31,8 @@ import {Management} from "../../assets/jc2";
 import ToolbarComponent from "../ToolbarComponent";
 
 import MissionPlannerContext from "./MissionPlanner";
+import MissionPlannerComponent from "./MissionPlannerComponent";
 import MissionPlannerMapElement from "./MissionPlannerMapElement";
-import MissionPlannerMissionsComponent from "./MissionPlannerMissionsComponent";
 import "../../assets/MissionPlanner.css";
 
 import CoordSysContext from "../map/CoordSysContext";
@@ -50,23 +53,32 @@ const tileUrl = process.env.REACT_APP_MAP_TILE_URL
 
 const styles = StyleSheet.create({
     toolbar: {
-        position: "absolute",
+        position: "fixed",
         zIndex: 1000,
         top: "1rem",
-        left: 64,
+        left: "64px",
     },
     geofenceEditor: {
-        position: "absolute",
+        position: "fixed",
         zIndex: 1000,
         top: "4rem",
-        left: 64,
+        left: "64px",
+    },
+    missionPlannerContainer: {
+        position: "fixed",
+        zIndex: 1000,
+        top: "5rem",
+        left: "10px",
+        width: "300px",
+        height: "50%",
+        fontSize: "0.9em",
+        backgroundColor: "white",
+        display: "flex",
+        flexFlow: "column",
     },
     missionPlanner: {
-        position: "absolute",
-        zIndex: 1000,
-        top: "4rem",
-        left: 64,
-    }
+        overflowY: "auto",
+    },
 });
 
 const MODE_NONE = 0;
@@ -82,6 +94,22 @@ const TOAST_NO_AUTOCLOSE = {
     position: toast.POSITION.BOTTOM_RIGHT,
     autoClose: false,
 };
+
+const geofenceEditorPopover = (
+    <Popover id="popover-basic">
+        <Popover.Title as="h3">Help</Popover.Title>
+        <Popover.Content>
+            <h6>Adding a point</h6>
+            <p>
+                Right-click on the map to add a point.
+            </p>
+            <h6>Deleting a point</h6>
+            <p>
+                Left-click on a point to bring up a menu and click on the delete button.
+            </p>
+        </Popover.Content>
+    </Popover>
+);
 
 class MapComponent
     extends React.Component {
@@ -129,7 +157,7 @@ class MapComponent
 
         this.vehicleTrailRef = React.createRef();
         this.geoFenceEditorRef = React.createRef();
-        this.missionTreeViewRef = React.createRef();
+        this.missionPlannerRef = React.createRef();
     }
 
     componentDidMount() {
@@ -276,7 +304,7 @@ class MapComponent
 
                         <VehicleTrailMapElement id="vehicleTrail"
                                                 ref={this.vehicleTrailRef}
-                                                hidden={!inNormalMode || !this.state.displayVehiclePath}
+                                                hidden={(!inNormalMode && !inMissionPlanner) || !this.state.displayVehiclePath}
                                                 color="yellow"
                                                 maxSize={1000}/>
 
@@ -367,7 +395,7 @@ class MapComponent
                                 </ButtonGroup>
                             )}
 
-                            {(inNormalMode || inMissionPlanner) && (
+                            {inNormalMode && (
                                 <ButtonGroup className="map-button-group">
                                     <Button active={inMissionPlanner}
                                             onClick={(e) => this._onToggleMissionPlanner(e)}>
@@ -380,38 +408,67 @@ class MapComponent
 
                     {inGeofenceEditor && (
                         <div className={css(styles.geofenceEditor)}>
+                            <Navbar bg="light" size="sm">
+                                <Navbar.Brand>Geofence Editor</Navbar.Brand>
+                                <Navbar.Collapse className="justify-content-end">
+                                    <Button className="ml-1"
+                                            onClick={(e) => this._onGeoFenceEditorCancel(e)}>
+                                        <FontAwesomeIcon icon={faTimes} title="Close"/>
+                                    </Button>
+                                </Navbar.Collapse>
+                            </Navbar>
                             <Card>
-                                <Card.Header>Geofence editor</Card.Header>
-                                <ButtonToolbar>
-                                    <ButtonGroup className="mr-1">
-                                        <Button onClick={(e) => this._onGeoFenceEditorUndo(e)}>
-                                            <FontAwesomeIcon icon={faUndo} color="#fff" title="Undo"/>
-                                        </Button>
-                                        <Button onClick={(e) => this._onGeoFenceEditorClear(e)}>
-                                            <FontAwesomeIcon icon={faTrashAlt} color="#fff" title="Clear"/>
-                                        </Button>
-                                    </ButtonGroup>
-                                    <ButtonGroup>
-                                        <Button onClick={(e) => this._onGeoFenceEditorSave(e)}>
-                                            <FontAwesomeIcon icon={faSave} color="#fff" title="Save and exit"/>
-                                        </Button>
-                                        <Button onClick={(e) => this._onGeoFenceEditorCancel(e)}>
-                                            <FontAwesomeIcon icon={faWindowClose} color="#fff"
-                                                             title="Cancel"/>
-                                        </Button>
-                                    </ButtonGroup>
-                                </ButtonToolbar>
+                                <Card.Body>
+                                    <ButtonToolbar>
+                                        <ButtonGroup className="mr-1">
+                                            <Button onClick={(e) => this._onGeoFenceEditorUndo(e)}>
+                                                <FontAwesomeIcon icon={faUndo} color="#fff" title="Undo"/>
+                                            </Button>
+                                            <Button onClick={(e) => this._onGeoFenceEditorClear(e)}>
+                                                <FontAwesomeIcon icon={faTrashAlt} color="#fff" title="Clear"/>
+                                            </Button>
+                                        </ButtonGroup>
+                                        <ButtonGroup className="mr-1">
+                                            <Button onClick={(e) => this._onGeoFenceEditorSave(e)}>
+                                                <FontAwesomeIcon icon={faSave} color="#fff" title="Save and exit"/>
+                                            </Button>
+                                        </ButtonGroup>
+                                        <ButtonGroup>
+                                            <OverlayTrigger trigger="click"
+                                                            placement="right"
+                                                            overlay={geofenceEditorPopover}>
+                                                <Button>
+                                                    <FontAwesomeIcon icon={faQuestion} color="#fff" title="Help"/>
+                                                </Button>
+                                            </OverlayTrigger>
+                                        </ButtonGroup>
+                                    </ButtonToolbar>
+                                </Card.Body>
                             </Card>
                         </div>
                     )}
 
                     {inMissionPlanner && (
-                        <div className={css(styles.missionPlanner)}>
-                            <MissionPlannerMissionsComponent ref={this.missionTreeViewRef}
-                                                             missions={this.state.missions}
-                                                             management={this.management}
-                                                             onMissionUpdated={(mission, index) => this._onMissionUpdated(mission, index)}
-                                                             onMissionDeleted={(index) => this._onMissionDeleted(index)}/>
+                        <div className={css(styles.missionPlannerContainer)}>
+                            <Navbar bg="light">
+                                <Navbar.Brand>Mission Planner</Navbar.Brand>
+                                <Navbar.Collapse className="justify-content-end">
+                                    <Button className="ml-1">
+                                        <FontAwesomeIcon icon={faPlus} title="New mission"/>
+                                    </Button>
+                                    <Button className="ml-1"
+                                            onClick={(e) => this._onToggleMissionPlanner(e)}>
+                                        <FontAwesomeIcon icon={faTimes} title="Close"/>
+                                    </Button>
+                                </Navbar.Collapse>
+                            </Navbar>
+                            <div className={css(styles.missionPlanner)}>
+                                <MissionPlannerComponent ref={this.missionPlannerRef}
+                                                         missionDefinitions={this.state.missionDefinitions}
+                                                         management={this.management}
+                                                         onMissionUpdated={(mission, index) => this._onMissionUpdated(mission, index)}
+                                                         onMissionDeleted={(index) => this._onMissionDeleted(index)}/>
+                            </div>
                         </div>
                     )}
 
@@ -424,10 +481,14 @@ class MapComponent
     // ----
 
     _updateOrigin(origin) {
+        const coordSys = new CoordSys(origin.latitude, origin.longitude);
+        const missionPlannerContext = this.state.missionPlannerContext;
+        missionPlannerContext.coordSys = coordSys;
         this.setState({
             origin: origin,
-            coordSys: new CoordSys(origin.latitude, origin.longitude),
+            coordSys: coordSys,
             mapCenter: [origin.latitude, origin.longitude],
+            missionPlannerContext: {...missionPlannerContext},
         }, () => this._fitMapToBounds());
     }
 
@@ -495,8 +556,8 @@ class MapComponent
 
     _onMapRightClick(e) {
         if (this.state.mode === MODE_MISSION_PLANNER) {
-            if (this.missionTreeViewRef.current) {
-                this.missionTreeViewRef.current.handleEvent(e);
+            if (this.missionPlannerRef.current) {
+                this.missionPlannerRef.current.handleEvent(e);
             }
         } else if (this.state.mode === MODE_GEOFENCE_EDITOR) {
             if (this.geoFenceEditorRef.current) {
@@ -578,6 +639,7 @@ class MapComponent
     // ---- mission planner ----
 
     _onMissionUpdated(mission, index) {
+        // TODO
         const missions = this.state.missions;
         if ((index < 0) || (index >= missions.length)) {
             return;
@@ -589,6 +651,7 @@ class MapComponent
     }
 
     _onMissionDeleted(index) {
+        // TODO
         const missions = this.state.missions;
         if ((index < 0) || (index >= missions.length)) {
             return;

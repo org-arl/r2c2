@@ -5,15 +5,15 @@ import {Form, FormControl, ListGroup, Tab, Table} from 'react-bootstrap';
 import StarfishMissions, {TYPES} from "../../lib/StarfishMissions";
 
 const styles = StyleSheet.create({
-    MLegInfoContainer: {
+    MissionPlannerTask: {
         position: "fixed",
-        // bottom: "0px",
-
-        right: "0px",
-        backgroundColor: "#fff",
+        zIndex: 1000,
+        top: "5rem",
+        right: "10px",
+        backgroundColor: "white",
         padding: "5px",
-        fontSize: "0.9em"
-    }
+        fontSize: "0.9em",
+    },
 });
 
 /*
@@ -52,7 +52,7 @@ class MissionPlannerTaskComponent
         }
 
         return (
-            <div className={css(styles.MLegInfoContainer)}>
+            <div className={css(styles.MissionPlannerTask)}>
                 <Tab.Container id="list-group-tabs-example" defaultActiveKey="#Properties">
                     <ListGroup horizontal>
                         <ListGroup.Item action href="#Properties">Properties</ListGroup.Item>

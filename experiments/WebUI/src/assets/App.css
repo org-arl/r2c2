@@ -150,7 +150,8 @@
 .dropdown_styles:hover .dropdown_content {display: block;}
 
 .map-button-group {
-    margin-right: 15px;
+    margin-right: 16px;
+    margin-bottom: 8px;
 }
 
 .mission_options{

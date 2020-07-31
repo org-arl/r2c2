@@ -1,5 +1,4 @@
-import React from 'react';
-import {css, StyleSheet} from 'aphrodite';
+import React, {Fragment} from 'react';
 import {Button, ListGroup, Modal} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faPlusCircle, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
@@ -9,22 +8,7 @@ import MissionPlannerContext from "./MissionPlanner";
 import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
 import MissionPlannerTaskComponent from "./MissionPlannerTaskComponent";
 
-const styles = StyleSheet.create({
-    missionsContainer: {
-        position: "fixed",
-        height: "50%",
-        width: "300px",
-        overflowY: "scroll",
-        // top: "0px",
-        // marginTop: "30px",
-        left: "0px",
-        backgroundColor: "#fff",
-        padding: "5px",
-        fontSize: "0.9em"
-    }
-});
-
-class MissionPlannerMissionsComponent
+class MissionPlannerComponent
     extends React.Component {
 
     static contextType = MissionPlannerContext;
@@ -33,7 +17,7 @@ class MissionPlannerMissionsComponent
         super(props, context);
 
         this.state = {
-            missions: this._clone(this.props.missions),
+            missionDefinitions: this._clone(this.props.missionDefinitions),
         };
 
         this.missionViewRef = React.createRef();
@@ -48,11 +32,12 @@ class MissionPlannerMissionsComponent
     }
 
     render() {
+        const missions = this.state.missionDefinitions.missions;
         return (
-            <div>
-                <div className={css(styles.missionsContainer)}>
+            <Fragment>
+                <div>
                     <ul>
-                        {this.state.missions.map((mission, index) => {
+                        {missions.map((mission, index) => {
                             const isSelected = (this.context.missionIndex === index);
                             const isNew = mission.createdAt;
                             const isModified = mission.updatedAt;
@@ -165,7 +150,7 @@ class MissionPlannerMissionsComponent
                 </Modal>
 
                 <ToastContainer/>
-            </div>
+            </Fragment>
         );
     }
 
@@ -364,4 +349,4 @@ class MissionPlannerMissionsComponent
     }
 }
 
-export default MissionPlannerMissionsComponent;
+export default MissionPlannerComponent;
