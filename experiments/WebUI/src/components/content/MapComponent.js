@@ -334,17 +334,19 @@ class MapComponent
                                     </Button>
                                 </ButtonGroup>
 
-                                <ButtonGroup className="map-button-group">
-                                    <Button onClick={(e) => this._onAbortMission(e)}>
-                                        <FontAwesomeIcon icon={faBan} title="Abort mission"/>
-                                    </Button>
-                                    <Button onClick={(e) => this._onStationKeep(e)}>
-                                        <FontAwesomeIcon icon={faSatellite} title="Station-keep"/>
-                                    </Button>
-                                    <Button onClick={(e) => this._onGoHome(e)}>
-                                        <FontAwesomeIcon icon={faHome} title="Go home"/>
-                                    </Button>
-                                </ButtonGroup>
+                                {inNormalMode && (
+                                    <ButtonGroup className="map-button-group">
+                                        <Button onClick={(e) => this._onAbortMission(e)}>
+                                            <FontAwesomeIcon icon={faBan} title="Abort mission"/>
+                                        </Button>
+                                        <Button onClick={(e) => this._onStationKeep(e)}>
+                                            <FontAwesomeIcon icon={faSatellite} title="Station-keep"/>
+                                        </Button>
+                                        <Button onClick={(e) => this._onGoHome(e)}>
+                                            <FontAwesomeIcon icon={faHome} title="Go home"/>
+                                        </Button>
+                                    </ButtonGroup>
+                                )}
 
                                 <ButtonGroup className="map-button-group">
                                     <div className="drawGeoFence_styles">
@@ -373,12 +375,14 @@ class MapComponent
                                     </div>
                                 </ButtonGroup>
 
-                                <ButtonGroup className="map-button-group">
-                                    <Button active={inMissionPlanner}
-                                            onClick={(e) => this._onToggleMissionPlanner(e)}>
-                                        Mission Planner
-                                    </Button>
-                                </ButtonGroup>
+                                {(inNormalMode || inMissionPlanner) && (
+                                    <ButtonGroup className="map-button-group">
+                                        <Button active={inMissionPlanner}
+                                                onClick={(e) => this._onToggleMissionPlanner(e)}>
+                                            Mission Planner
+                                        </Button>
+                                    </ButtonGroup>
+                                )}
                             </ButtonToolbar>
                         </Row>
 
