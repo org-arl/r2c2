@@ -1,6 +1,7 @@
 import React, {Fragment, PureComponent} from 'react';
 import {css, StyleSheet} from 'aphrodite';
 import CoordSysContext from "./CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
 
 const styles = StyleSheet.create({
     cursorPositionContainer: {
@@ -9,9 +10,12 @@ const styles = StyleSheet.create({
         left: "0px",
         backgroundColor: "#fff",
         padding: "5px",
-        fontSize: "0.9em"
+        fontSize: "0.9em",
+        zIndex: 1000,
     }
 });
+
+const DEBUG = false;
 
 /**
  * Props: position
@@ -20,6 +24,10 @@ class CursorPositionComponent
     extends PureComponent {
 
     static contextType = CoordSysContext;
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
+    }
 
     render() {
         if (!this.props.position) {

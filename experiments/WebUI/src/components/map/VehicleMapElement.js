@@ -2,6 +2,9 @@ import React, {PureComponent} from "react";
 import {Circle, LayerGroup, Marker, Popup} from "react-leaflet";
 import {notReadyMarker, readyMarker} from "../../assets/MapIcons";
 import CoordSysContext from "./CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+
+const DEBUG = false;
 
 /**
  * Props: id, point, errorRadius, ready
@@ -10,6 +13,10 @@ class VehicleMapElement
     extends PureComponent {
 
     static contextType = CoordSysContext;
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
+    }
 
     render() {
         const coordSys = this.context;

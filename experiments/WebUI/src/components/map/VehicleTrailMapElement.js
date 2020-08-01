@@ -1,6 +1,9 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Polyline} from "react-leaflet";
 import CoordSysContext from "./CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+
+const DEBUG = false;
 
 /**
  * Props: id, color, maxSize, hidden
@@ -16,6 +19,10 @@ class VehicleTrailMapElement
         this.state = {
             positions: [],
         };
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
     }
 
     render() {

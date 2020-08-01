@@ -2,6 +2,9 @@ import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polyline, Popup} from "react-leaflet";
 import {mapPin} from "../../assets/MapIcons";
 import CoordSysContext from "./CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+
+const DEBUG = true;
 
 /**
  * Props: id, mission, color
@@ -10,6 +13,10 @@ class MissionMapElement
     extends PureComponent {
 
     static contextType = CoordSysContext;
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
+    }
 
     render() {
         const coordSys = this.context;

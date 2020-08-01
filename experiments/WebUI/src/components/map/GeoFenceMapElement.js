@@ -1,6 +1,9 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Polygon} from "react-leaflet";
 import CoordSysContext from "./CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+
+const DEBUG = false;
 
 /**
  * Props: id, points, color
@@ -9,6 +12,10 @@ class GeoFenceMapElement
     extends PureComponent {
 
     static contextType = CoordSysContext;
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
+    }
 
     render() {
         const positions = this._toPositions(this.props.points);

@@ -5,6 +5,9 @@ import CoordSysContext from "./CoordSysContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "react-bootstrap";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+
+const DEBUG = false;
 
 /**
  * Props: id, points, color
@@ -22,6 +25,10 @@ class GeoFenceEditorMapElement
             positions: positions,
             editStack: [this._clonePositions(positions)],
         };
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
     }
 
     render() {
