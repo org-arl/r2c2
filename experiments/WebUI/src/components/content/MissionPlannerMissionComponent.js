@@ -1,34 +1,31 @@
-import React from "react";
+import React, {PureComponent} from "react";
 import {ListGroup} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Group, Line} from "pts";
-
-import CustomReactComponent, {SECTION_CONTEXT} from "./CustomReactComponent";
 import StarfishMissions from "../../lib/StarfishMissions";
-import MissionPlannerContext from "./MissionPlanner";
+import CoordSysContext from "../map/CoordSysContext";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
 
+const DEBUG = true;
+
+/**
+ * props: mission, selectedTaskIndex, onTaskSelected
+ */
 class MissionPlannerMissionComponent
-    extends CustomReactComponent {
+    extends PureComponent {
 
-    static contextType = MissionPlannerContext;
+    static contextType = CoordSysContext;
 
-    constructor(props, context) {
-        super(props, context);
-
-        this.cacheKeys = {};
-        this.cacheKeys[SECTION_CONTEXT] = ['mission', 'taskIndex'];
-    }
-
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
-        return super.checkForChanges(nextProps, nextState, nextContext);
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
     }
 
     render() {
-        const mission = this.context.mission;
-        const taskIndex = this.context.taskIndex;
+        const mission = this.props.mission;
+        const selectedTaskIndex = this.props.selectedTaskIndex;
 
-        if (mission === null) {
+        if (!mission) {
             return null;
         }
         return (
@@ -36,8 +33,8 @@ class MissionPlannerMissionComponent
                 {mission.tasks.map((task, index) => {
                     return (
                         <ListGroup.Item action
-                                        className={(index === taskIndex) ? 'active' : ''}
-                                        onClick={(e) => this._onSelect(e, task, index)}
+                                        className={(index === selectedTaskIndex) ? 'active' : ''}
+                                        onClick={(e) => this._onSelect(task, index)}
                                         key={index}>
                             <span>
                                 {this._getType(task)}: {this._toPositionString(task.position)}
@@ -107,9 +104,10 @@ class MissionPlannerMissionComponent
 
     // ---- event handlers ----
 
-    _onSelect(e, task, index) {
-        this.context.task = task;
-        this.context.taskIndex = index;
+    _onSelect(task, index) {
+        if (this.props.onTaskSelected) {
+            this.props.onTaskSelected(index);
+        }
     }
 
     _onDelete(e, task, index) {

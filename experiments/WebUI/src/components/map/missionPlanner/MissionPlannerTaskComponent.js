@@ -1,8 +1,11 @@
-import React, {Fragment} from 'react';
+import React, {Fragment, PureComponent} from 'react';
 import {css, StyleSheet} from 'aphrodite';
 import {Form, FormControl, ListGroup, Tab, Table} from 'react-bootstrap';
 
-import StarfishMissions, {TYPES} from "../../lib/StarfishMissions";
+import StarfishMissions, {TYPES} from "../../../lib/StarfishMissions";
+import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
+
+const DEBUG = true;
 
 const styles = StyleSheet.create({
     MissionPlannerTask: {
@@ -16,33 +19,96 @@ const styles = StyleSheet.create({
     },
 });
 
+function _toForm(task) {
+    if (!task) {
+        return null;
+    }
+
+    const taskDefinition = StarfishMissions.getMissionTaskByType(task.type);
+
+    const form = {
+        type: null,
+        properties: {},
+        parameters: {},
+        payloads: {},
+        position: {
+            x: {
+                type: TYPES.FLOAT,
+                value: task.position.x,
+            },
+            y: {
+                type: TYPES.FLOAT,
+                value: task.position.y,
+            },
+            z: {
+                type: TYPES.FLOAT,
+                value: task.position.z,
+            },
+        },
+    };
+
+    if (taskDefinition !== null) {
+        form.type = taskDefinition.name;
+        taskDefinition.props.forEach((prop) => {
+            const value = ('properties' in task) && (prop.name in task.properties)
+                ? task.properties[prop.name] : '';
+            form.properties[prop.name] = {
+                type: prop.type,
+                value: value,
+            }
+        });
+    }
+    StarfishMissions.getParameters().forEach((parameter) => {
+        const value = ('parameters' in task) && (parameter.name in task.parameters)
+            ? task.parameters[parameter.name] : '';
+        form.parameters[parameter.name] = {
+            type: parameter.type,
+            value: value,
+        };
+    });
+    StarfishMissions.getPayloads().forEach((payload) => {
+        const value = ('payloads' in task) && (payload in task.payloads)
+            ? task.payloads[payload] : '';
+        form.payloads[payload] = {
+            type: TYPES.INT,
+            value: value,
+        };
+    });
+
+    return form;
+}
+
 /*
- * properties: missionLeg
+ * properties: task, onChange
  */
 class MissionPlannerTaskComponent
-    extends React.Component {
+    extends PureComponent {
 
     constructor(props, context) {
         super(props, context);
 
         this.state = {
-            missionLeg: this.props.missionLeg,
+            task: props.task,
+            form: _toForm(props.task),
+
+            prevTask: props.task,
         }
     }
 
-    // ---- React.Component ----
+    static getDerivedStateFromProps(props, state) {
+        if (props.task !== state.prevTask) {
+            return {
+                task: props.task,
+                form: _toForm(props.task),
 
-    componentDidMount() {
-        this._initializeForm(this.props.missionLeg);
+                prevTask: props.task,
+            };
+        }
+        return null;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.missionLeg !== this.props.missionLeg) {
-            this.setState({
-                missionLeg: this.props.missionLeg,
-            });
-            this._initializeForm(this.props.missionLeg);
-        }
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
     }
 
     render() {
@@ -77,7 +143,7 @@ class MissionPlannerTaskComponent
                                         <Form.Control name="type"
                                                       as="select"
                                                       value={form.type}
-                                                      onChange={(e) => this._onTypeChange(e)}>
+                                                      onChange={this._onTypeChange}>
                                             {StarfishMissions.getMissionTasks().map((taskDefinition, index) => {
                                                 return (
                                                     <option key={index}>{taskDefinition.name}</option>
@@ -86,18 +152,18 @@ class MissionPlannerTaskComponent
                                         </Form.Control>
                                     </td>
                                 </tr>
-                                {this._createTableRows(form.properties, (e) => this._onPropertyChange(e))}
+                                {this._createTableRows(form.properties, this._onPropertyChange)}
                                 </tbody>
                             </Table>
                         </Tab.Pane>
                         <Tab.Pane eventKey="#Parameters">
-                            {this._createTable(form.parameters, (e) => this._onParameterChange(e))}
+                            {this._createTable(form.parameters, this._onParameterChange)}
                         </Tab.Pane>
                         <Tab.Pane eventKey="#Payloads">
-                            {this._createTable(form.payloads, (e) => this._onPayloadChange(e))}
+                            {this._createTable(form.payloads, this._onPayloadChange)}
                         </Tab.Pane>
                         <Tab.Pane eventKey="#Position">
-                            {this._createTable(form.position, (e) => this._onPositionChange(e))}
+                            {this._createTable(form.position, this._onPositionChange)}
                         </Tab.Pane>
                     </Tab.Content>
                 </Tab.Container>
@@ -105,98 +171,35 @@ class MissionPlannerTaskComponent
         );
     }
 
-    // ---- initialization ----
-
-    _initializeForm(task) {
-        if (task === null) {
-            this.setState({
-                form: null,
-            });
-            return;
-        }
-
-        const taskDefinition = StarfishMissions.getMissionTaskByType(task.type);
-
-        const form = {
-            type: null,
-            properties: {},
-            parameters: {},
-            payloads: {},
-            position: {
-                x: {
-                    type: TYPES.FLOAT,
-                    value: task.position.x,
-                },
-                y: {
-                    type: TYPES.FLOAT,
-                    value: task.position.y,
-                },
-                z: {
-                    type: TYPES.FLOAT,
-                    value: task.position.z,
-                },
-            },
-        };
-
-        if (taskDefinition !== null) {
-            form.type = taskDefinition.name;
-            taskDefinition.props.forEach((prop) => {
-                const value = ('properties' in task) && (prop.name in task.properties)
-                    ? task.properties[prop.name] : '';
-                form.properties[prop.name] = {
-                    type: prop.type,
-                    value: value,
-                }
-            });
-        }
-        StarfishMissions.getParameters().forEach((parameter) => {
-            const value = ('parameters' in task) && (parameter.name in task.parameters)
-                ? task.parameters[parameter.name] : '';
-            form.parameters[parameter.name] = {
-                type: parameter.type,
-                value: value,
-            };
-        });
-        StarfishMissions.getPayloads().forEach((payload) => {
-            const value = ('payloads' in task) && (payload in task.payloads)
-                ? task.payloads[payload] : '';
-            form.payloads[payload] = {
-                type: TYPES.INT,
-                value: value,
-            };
-        });
-        this.setState({
-            form: form,
-        });
-    }
-
     // ---- event handlers ----
 
-    _onTypeChange(e) {
+    _onTypeChange = function (e) {
         const taskDefinition = StarfishMissions.getMissionTaskByName(e.target.value);
         if (taskDefinition === null) {
             return;
         }
-        const task = this.props.missionLeg;
+        const task = this.props.task;
         task.type = taskDefinition.type;
-        this._initializeForm(task);
-    }
+        this.setState({
+            form: _toForm(task),
+        });
+    }.bind(this);
 
-    _onPropertyChange(e) {
+    _onPropertyChange = function (e) {
         this._handleEvent('properties', e);
-    }
+    }.bind(this);
 
-    _onParameterChange(e) {
+    _onParameterChange = function (e) {
         this._handleEvent('parameters', e);
-    }
+    }.bind(this);
 
-    _onPayloadChange(e) {
+    _onPayloadChange = function (e) {
         this._handleEvent('payloads', e);
-    }
+    }.bind(this);
 
-    _onPositionChange(e) {
+    _onPositionChange = function (e) {
         this._handleEvent('position', e);
-    }
+    }.bind(this);
 
     _handleEvent(type, e) {
         if (((e.type === 'keyup') && (e.keyCode === 13)) || (e.type === 'blur')) {
@@ -206,9 +209,9 @@ class MissionPlannerTaskComponent
             const value = this._parseValue(field.type, rawValue);
             field.value = (value !== null) ? value : '';
             this.setState({
-                form: this.state.form,
+                form: {...this.state.form},
             });
-            const task = this.props.missionLeg;
+            const task = this.props.task;
             if (!(type in task)) {
                 task[type] = {};
             }
@@ -222,7 +225,7 @@ class MissionPlannerTaskComponent
             const field = this.state.form[type][name];
             field.value = value;
             this.setState({
-                form: this.state.form,
+                form: {...this.state.form},
             });
         }
     }

@@ -1,49 +1,58 @@
-import React, {Fragment} from 'react';
+import React, {Fragment, PureComponent} from 'react';
 import {Button, ListGroup, Modal} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faPlusCircle, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
+import {faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import {toast, ToastContainer} from "react-toastify";
 
-import MissionPlannerContext from "./MissionPlanner";
 import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
-import MissionPlannerTaskComponent from "./MissionPlannerTaskComponent";
+import MissionPlannerTaskComponent from "../map/missionPlanner/MissionPlannerTaskComponent";
+import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+import CoordSysContext from "../map/CoordSysContext";
 
+const DEBUG = true;
+
+/**
+ * props:
+ * - missionDefinitions, selectedMissionIndex, selectedTaskIndex,
+ * - onMissionSelected, onTaskSelected, onTaskChanged,
+ * - onRevertMissionRequested, onSaveMissionRequested, onDeleteMissionRequested
+ */
 class MissionPlannerComponent
-    extends React.Component {
+    extends PureComponent {
 
-    static contextType = MissionPlannerContext;
+    static contextType = CoordSysContext;
 
     constructor(props, context) {
         super(props, context);
 
-        this.state = {
-            missionDefinitions: this._clone(this.props.missionDefinitions),
-        };
+        this.state = {};
 
         this.missionViewRef = React.createRef();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.missions !== this.props.missions) {
-            this.setState({
-                missions: this._clone(this.props.missions),
-            });
-        }
+        checkComponentDidUpdate(DEBUG, this, prevProps, prevState);
     }
 
     render() {
-        const missions = this.state.missionDefinitions.missions;
+        const missions = this.props.missionDefinitions.missions;
+        const selectedMission =
+            (this.props.selectedMissionIndex >= 0) && (this.props.selectedMissionIndex < missions.length)
+                ? missions[this.props.selectedMissionIndex] : null;
+        const selectedTask =
+            selectedMission && (this.props.selectedTaskIndex >= 0) && (this.props.selectedTaskIndex < selectedMission.tasks.length)
+                ? selectedMission.tasks[this.props.selectedTaskIndex] : null;
         return (
             <Fragment>
                 <div>
                     <ul>
                         {missions.map((mission, index) => {
-                            const isSelected = (this.context.missionIndex === index);
+                            const isSelected = (this.props.selectedMissionIndex === index);
                             const isNew = mission.createdAt;
                             const isModified = mission.updatedAt;
                             return (
                                 <ListGroup.Item key={index}>
-                                    <div onClick={(e) => this._onMissionSelected(e, mission, index)}
+                                    <div onClick={(e) => this._onMissionSelected(mission, index)}
                                          className={isSelected ? 'caret caret-down' : 'caret'}>
                                         {isModified && (
                                             <span className="editedMission">*</span>
@@ -67,21 +76,19 @@ class MissionPlannerComponent
                                                          title="Delete mission"/>
                                     </div>
                                     {isSelected && (
-                                        <MissionPlannerMissionComponent ref={this.missionViewRef}/>
+                                        <MissionPlannerMissionComponent ref={this.missionViewRef}
+                                                                        mission={mission}
+                                                                        selectedTaskIndex={this.props.selectedTaskIndex}
+                                                                        onTaskSelected={this.props.onTaskSelected}/>
                                     )}
                                 </ListGroup.Item>
                             );
                         })}
-                        <ListGroup.Item onClick={(e) => this._onAddMission(e)}
-                                        key="newMission"
-                                        className="addMissionBtn">
-                            <FontAwesomeIcon icon={faPlusCircle} title="New mission"/>
-                        </ListGroup.Item>
                     </ul>
                 </div>
 
-                <MissionPlannerTaskComponent missionLeg={this.context.task}
-                                             onChange={(task) => this._onTaskChanged(task)}/>
+                <MissionPlannerTaskComponent task={selectedTask}
+                                             onChange={this._onTaskChanged}/>
 
                 <Modal
                     show={this.state.showSaveChangesDialog}
@@ -164,23 +171,22 @@ class MissionPlannerComponent
 
     // ---- ui events ----
 
-    _onMissionSelected(e, mission, index) {
-        this.context.mission = mission;
-        this.context.missionIndex = index;
-        this.context.task = null;
-        this.context.taskIndex = -1;
+    _onMissionSelected(mission, index) {
+        if (this.props.onMissionSelected) {
+            this.props.onMissionSelected(index);
+        }
     }
 
-    _onTaskChanged(task) {
-        const mission = this.context.mission;
-        mission.updatedAt = Date.now();
-        this.context.mission = {...mission};
-    }
+    _onTaskChanged = function (task) {
+        if (this.props.onTaskChanged) {
+            this.props.onTaskChanged(task);
+        }
+    }.bind(this);
 
     _onSaveChangesRequested(e, mission, index) {
         e.stopPropagation();
 
-        if (!this.context.mission.updatedAt) {
+        if (!mission.updatedAt) {
             return;
         }
 
@@ -191,36 +197,15 @@ class MissionPlannerComponent
     }
 
     _onSaveChangesConfirmed(e) {
-        const index = this.state.saveChangesMissionIndex;
-
+        if (this.props.onSaveMissionRequested) {
+            const index = this.state.saveChangesMissionIndex;
+            const mission = this.props.missionDefinitions.missions[index];
+            this.props.onSaveMissionRequested(index, mission);
+        }
         this.setState({
             showSaveChangesDialog: false,
             saveChangesMissionIndex: -1,
         });
-
-        const missions = this.state.missions;
-        const mission = missions[index];
-        delete (mission.updatedAt);
-        this.props.management.updateMission(mission, index)
-            .then(response => {
-                console.log(response);
-                toast.success('Changes to mission #' + (index + 1) + ' saved.');
-
-                this.setState({
-                    missions: [...missions],
-                });
-                this.context.mission = mission;
-                this.context.task = null;
-                this.context.taskIndex = -1;
-
-                if (this.props.onMissionUpdated) {
-                    this.props.onMissionUpdated(mission, index);
-                }
-            })
-            .catch(reason => {
-                console.log('Error: could not save mission', reason);
-                toast.error('Failed to save changes to mission #' + (index + 1) + '.');
-            });
     }
 
     _onSaveChangesCancelled(e) {
@@ -233,7 +218,7 @@ class MissionPlannerComponent
     _onDiscardChangesRequested(e, mission, index) {
         e.stopPropagation();
 
-        if (!this.context.mission.updatedAt) {
+        if (!mission.updatedAt) {
             return;
         }
 
@@ -244,19 +229,16 @@ class MissionPlannerComponent
     }
 
     _onDiscardChangesConfirmed(e) {
-        const index = this.state.discardChangesMissionIndex;
-        const missions = this.state.missions;
-        const clonedOriginalMission = this._clone(this.props.missions[index]);
-        missions[index] = clonedOriginalMission;
+        if (this.props.onRevertMissionRequested) {
+            const index = this.state.discardChangesMissionIndex;
+            if (this.props.onRevertMissionRequested(index)) {
+                toast.success('Changes to mission #' + (index + 1) + ' discarded.');
+            }
+        }
         this.setState({
             showDiscardChangesDialog: false,
-            missions: [...missions],
+            discardChangesMissionIndex: -1,
         });
-        this.context.mission = clonedOriginalMission;
-        this.context.task = null;
-        this.context.taskIndex = -1;
-
-        toast.success('Changes to mission #' + (index + 1) + ' discarded.');
     }
 
     _onDiscardChangesCancelled(e) {
@@ -276,48 +258,14 @@ class MissionPlannerComponent
     }
 
     _onDeleteMissionConfirmed(e) {
-        const index = this.state.deleteMissionIndex;
-
+        if (this.props.onDeleteMissionRequested) {
+            const index = this.state.deleteMissionIndex;
+            this.props.onDeleteMissionRequested(index);
+        }
         this.setState({
             showDeleteMissionDialog: false,
             deleteMissionIndex: -1,
         });
-
-        const missions = this.state.missions;
-        const mission = this.state.missions[index];
-        if (mission.createdAt) {
-            missions.splice(index, 1);
-            this.setState({
-                missions: [...missions],
-            });
-            this.context.mission = null;
-            this.context.missionIndex = -1;
-            this.context.task = null;
-            this.context.taskIndex = -1;
-        } else {
-            this.props.management.deleteMission(index)
-                .then(response => {
-                    console.log(response);
-                    toast.success('Mission #' + (index + 1) + ' deleted.');
-
-                    missions.splice(index, 1);
-                    this.setState({
-                        missions: [...missions],
-                    });
-                    this.context.mission = null;
-                    this.context.missionIndex = -1;
-                    this.context.task = null;
-                    this.context.taskIndex = -1;
-
-                    if (this.props.onMissionDeleted) {
-                        this.props.onMissionDeleted(index);
-                    }
-                })
-                .catch(reason => {
-                    console.log('Error: could not delete mission', reason);
-                    toast.error('Failed to delete mission #' + (index + 1) + '.');
-                });
-        }
     }
 
     _onDeleteMissionCancelled(e) {
@@ -325,27 +273,6 @@ class MissionPlannerComponent
             showDeleteMissionDialog: false,
             deleteMissionIndex: -1,
         });
-    }
-
-    _onAddMission(e) {
-        const mission = {
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            tasks: [],
-        };
-        const missions = this.state.missions;
-        missions.push(mission);
-        this.setState({
-            missions: [...missions],
-        });
-        this.context.mission = mission;
-        this.context.missionIndex = missions.length - 1;
-        this.context.task = null;
-        this.context.taskIndex = -1;
-    }
-
-    _clone(o) {
-        return JSON.parse(JSON.stringify(o));
     }
 }
 
