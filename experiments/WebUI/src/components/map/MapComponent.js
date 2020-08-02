@@ -4,9 +4,11 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {
     faBan,
     faCrosshairs,
+    faDrawPolygon,
     faHome,
     faPlus,
     faQuestion,
+    faRoute,
     faSatellite,
     faSave,
     faTimes,
@@ -19,9 +21,6 @@ import {css, StyleSheet} from 'aphrodite';
 
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-import fenceIcon from '../../assets/img/fence.svg';
-import missionPtsIcon from '../../assets/img/missionPtsIcon.svg';
 import pathIcon from '../../assets/img/path.svg';
 
 import CoordSys from "../../assets/CoordSys";
@@ -356,13 +355,11 @@ class MapComponent
                                 <Fragment>
                                     <Button active={this.state.displayGeoFence}
                                             onClick={this._onToggleGeoFence}>
-                                        <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
-                                             alt="Toggle geofence"/>
+                                        <FontAwesomeIcon icon={faDrawPolygon} title="Toggle geofence"/>
                                     </Button>
                                     <Button active={this.state.displayMission}
                                             onClick={this._onToggleMission}>
-                                        <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
-                                             alt="Toggle mission points"/>
+                                        <FontAwesomeIcon icon={faRoute} title="Toggle mission points"/>
                                     </Button>
                                     <Button active={this.state.displayVehiclePath}
                                             onClick={this._onToggleVehiclePath}>
