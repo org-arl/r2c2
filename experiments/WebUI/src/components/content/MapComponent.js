@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {Fragment} from 'react'
 import {Map as LeafletMap, TileLayer} from 'react-leaflet';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {
@@ -322,49 +322,55 @@ class MapComponent
                             </Button>
                         </ButtonGroup>
 
-                        <ButtonGroup className="map-button-group">
-                            <div className="dropdown_styles">
-                                <Button>Missions</Button>
-                                <div className="dropdown_content">
-                                    {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => {
-                                        return (
-                                            <div key={index}>
-                                                #{index + 1}
-                                                &nbsp;
-                                                <Button onClick={(e) => this._onViewMission(mission, index)}>
-                                                    View
-                                                </Button>
-                                                &nbsp;
-                                                <Button onClick={(e) => this._onRunMission(mission, index)}
-                                                        disabled={!inNormalMode}>
-                                                    Run
-                                                </Button>
-                                            </div>
-                                        );
-                                    })}
+                        {inNormalMode && (
+                            <ButtonGroup className="map-button-group">
+                                <div className="dropdown_styles">
+                                    <Button>Missions</Button>
+                                    <div className="dropdown_content">
+                                        {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => {
+                                            return (
+                                                <div key={index}>
+                                                    #{index + 1}
+                                                    &nbsp;
+                                                    <Button onClick={(e) => this._onViewMission(mission, index)}>
+                                                        View
+                                                    </Button>
+                                                    &nbsp;
+                                                    <Button onClick={(e) => this._onRunMission(mission, index)}
+                                                            disabled={!inNormalMode}>
+                                                        Run
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        </ButtonGroup>
+                            </ButtonGroup>
+                        )}
 
                         <ButtonGroup className="map-button-group">
                             <Button onClick={this._onRecentreMap}>
                                 <FontAwesomeIcon icon={faCrosshairs} title="Re-center map"/>
                             </Button>
-                            <Button active={this.state.displayGeoFence}
-                                    onClick={this._onToggleGeoFence}>
-                                <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
-                                     alt="Toggle geofence"/>
-                            </Button>
-                            <Button active={this.state.displayMission}
-                                    onClick={this._onToggleMission}>
-                                <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
-                                     alt="Toggle mission points"/>
-                            </Button>
-                            <Button active={this.state.displayVehiclePath}
-                                    onClick={this._onToggleVehiclePath}>
-                                <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
-                                     alt="Toggle vehicle path"/>
-                            </Button>
+                            {inNormalMode && (
+                                <Fragment>
+                                    <Button active={this.state.displayGeoFence}
+                                            onClick={this._onToggleGeoFence}>
+                                        <img title="Toggle geofence" src={fenceIcon} height={20} width={20}
+                                             alt="Toggle geofence"/>
+                                    </Button>
+                                    <Button active={this.state.displayMission}
+                                            onClick={this._onToggleMission}>
+                                        <img title="Toggle mission points" src={missionPtsIcon} height={25} width={25}
+                                             alt="Toggle mission points"/>
+                                    </Button>
+                                    <Button active={this.state.displayVehiclePath}
+                                            onClick={this._onToggleVehiclePath}>
+                                        <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
+                                             alt="Toggle vehicle path"/>
+                                    </Button>
+                                </Fragment>
+                            )}
                         </ButtonGroup>
 
                         {inNormalMode && (
@@ -513,6 +519,7 @@ class MapComponent
         this._checkVehicleReadiness();
     }
 
+    // TODO bounds should depend on mode
     _fitMapToBounds() {
         if (!this.state.coordSys) {
             return;
