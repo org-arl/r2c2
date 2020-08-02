@@ -3,14 +3,14 @@ import {ListGroup} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Group, Line} from "pts";
-import StarfishMissions from "../../lib/StarfishMissions";
-import CoordSysContext from "../map/CoordSysContext";
-import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+import StarfishMissions from "../../../lib/StarfishMissions";
+import CoordSysContext from "../CoordSysContext";
+import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
 
 const DEBUG = true;
 
 /**
- * props: mission, selectedTaskIndex, onTaskSelected
+ * props: mission, selectedTaskIndex, onTaskSelected, onTaskAdded, onTaskDeleted
  */
 class MissionPlannerMissionComponent
     extends PureComponent {
@@ -56,48 +56,45 @@ class MissionPlannerMissionComponent
     // ---- custom public methods ----
 
     handleEvent(e) {
+        const mission = this.props.mission;
+        const coordSys = this.context;
+        if (!mission || !coordSys) {
+            return;
+        }
+
         const distanceThreshold = 10;
-        const mission = this.context.mission;
-        if (mission !== null) {
-            const point = [
-                this.context.coordSys.long2locx(e.latlng.lng),
-                this.context.coordSys.lat2locy(e.latlng.lat),
-            ];
-            const points = this.context.mission.tasks.map((task) => [task.position.x, task.position.y]);
-            let matchedIndex = -1;
-            let matchedDistance = NaN;
-            for (let i = 0; i < (points.length - 1); i++) {
-                const point1 = points[i];
-                const point2 = points[i + 1];
-                if (this._isInRectangle(point1, point2, point)) {
-                    const line = Group.fromArray([point1, point2]);
-                    const distance = Line.distanceFromPt(line, point);
-                    if (distance <= distanceThreshold) {
-                        if ((matchedIndex === -1) || (distance < matchedDistance)) {
-                            matchedIndex = i;
-                            matchedDistance = distance;
-                        }
+        const point = [coordSys.long2locx(e.latlng.lng), coordSys.lat2locy(e.latlng.lat)];
+        const points = mission.tasks.map((task) => [task.position.x, task.position.y]);
+        let matchedIndex = -1;
+        let matchedDistance = NaN;
+        for (let i = 0; i < (points.length - 1); i++) {
+            const point1 = points[i];
+            const point2 = points[i + 1];
+            if (this._isInRectangle(point1, point2, point)) {
+                const line = Group.fromArray([point1, point2]);
+                const distance = Line.distanceFromPt(line, point);
+                if (distance <= distanceThreshold) {
+                    if ((matchedIndex === -1) || (distance < matchedDistance)) {
+                        matchedIndex = i;
+                        matchedDistance = distance;
                     }
                 }
             }
-            if (matchedIndex >= 0) {
-                mission.tasks.splice(matchedIndex + 1, 0, this._createNewTask(point));
-                this._fireMissionUpdated(mission);
-            } else {
-                if (points.length > 1) {
-                    const distanceSquared1 = this._getDistanceSquared(point, points[0]);
-                    const distanceSquared2 = this._getDistanceSquared(point, points[points.length - 1]);
-                    if (distanceSquared2 <= distanceSquared1) {
-                        mission.tasks.push(this._createNewTask(point));
-                        this._fireMissionUpdated(mission);
-                    } else {
-                        mission.tasks.splice(0, 0, this._createNewTask(point));
-                        this._fireMissionUpdated(mission);
-                    }
+        }
+        const newTask = this._createNewTask(point);
+        if (matchedIndex >= 0) {
+            this._fireOnTaskAdded(newTask, matchedIndex + 1);
+        } else {
+            if (points.length > 1) {
+                const distanceSquared1 = this._getDistanceSquared(point, points[0]);
+                const distanceSquared2 = this._getDistanceSquared(point, points[points.length - 1]);
+                if (distanceSquared2 <= distanceSquared1) {
+                    this._fireOnTaskAdded(newTask, points.length);
                 } else {
-                    mission.tasks.push(this._createNewTask(point));
-                    this._fireMissionUpdated(mission);
+                    this._fireOnTaskAdded(newTask, 0);
                 }
+            } else {
+                this._fireOnTaskAdded(newTask, points.length);
             }
         }
     }
@@ -113,18 +110,21 @@ class MissionPlannerMissionComponent
     _onDelete(e, task, index) {
         e.stopPropagation();
 
-        const mission = this.context.mission;
-        mission.tasks.splice(index, 1);
-        this._fireMissionUpdated(mission);
+        this._fireOnTaskDeleted(task, index);
     }
 
     // ----
 
-    _fireMissionUpdated(mission) {
-        mission.updatedAt = Date.now();
-        this.context.mission = {...mission};
-        this.context.task = null;
-        this.context.taskIndex = -1;
+    _fireOnTaskAdded(task, index) {
+        if (this.props.onTaskAdded) {
+            this.props.onTaskAdded(task, index);
+        }
+    }
+
+    _fireOnTaskDeleted(task, index) {
+        if (this.props.onTaskDeleted) {
+            this.props.onTaskDeleted(task, index);
+        }
     }
 
     _isInRectangle(point1, point2, point) {

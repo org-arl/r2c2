@@ -7,7 +7,7 @@ import { StyleSheet, css } from 'aphrodite';
 import SidebarComponent from './sidebar/SidebarComponent';
 import DashboardComponent from './content/DashboardComponent';
 import DiagnosticsComponent from './content/DiagnosticsComponent';
-import MapComponent from './content/MapComponent';
+import MapComponent from './map/MapComponent';
 import ScriptControl from './content/ScriptControl';
 import SentuatorsComponent from './content/SentuatorsComponent';
 

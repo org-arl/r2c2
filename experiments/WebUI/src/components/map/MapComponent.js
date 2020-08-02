@@ -30,17 +30,17 @@ import {Management} from "../../assets/jc2";
 
 import ToolbarComponent from "../ToolbarComponent";
 
-import MissionPlannerComponent from "./MissionPlannerComponent";
-import MissionPlannerMapElement from "../map/missionPlanner/MissionPlannerMapElement";
+import MissionPlannerComponent from "./missionPlanner/MissionPlannerComponent";
+import MissionPlannerMapElement from "./missionPlanner/MissionPlannerMapElement";
 import "../../assets/MissionPlanner.css";
 
-import CoordSysContext from "../map/CoordSysContext";
-import CursorPositionComponent from "../map/CursorPositionComponent";
-import GeoFenceEditorMapElement from "../map/GeoFenceEditorMapElement";
-import GeoFenceMapElement from "../map/GeoFenceMapElement";
-import MissionMapElement from "../map/MissionMapElement";
-import VehicleMapElement from "../map/VehicleMapElement";
-import VehicleTrailMapElement from "../map/VehicleTrailMapElement";
+import CoordSysContext from "./CoordSysContext";
+import CursorPositionComponent from "./CursorPositionComponent";
+import GeoFenceEditorMapElement from "./GeoFenceEditorMapElement";
+import GeoFenceMapElement from "./GeoFenceMapElement";
+import MissionMapElement from "./MissionMapElement";
+import VehicleMapElement from "./VehicleMapElement";
+import VehicleTrailMapElement from "./VehicleTrailMapElement";
 
 console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
 
@@ -471,11 +471,13 @@ class MapComponent
                                                      selectedTaskIndex={this.state.missionPlannerSelectedTaskIndex}
 
                                                      onMissionSelected={this._onMissionPlannerMissionSelected}
-                                                     onTaskSelected={this._onMissionPlannerTaskSelected}
-                                                     onTaskChanged={this._onMissionPlannerTaskChanged}
                                                      onRevertMissionRequested={this._onMissionPlannerRevertMissionRequested}
                                                      onSaveMissionRequested={this._onMissionPlannerSaveMissionRequested}
-                                                     onDeleteMissionRequested={this._onMissionPlannerDeleteMissionRequested}/>
+                                                     onDeleteMissionRequested={this._onMissionPlannerDeleteMissionRequested}
+                                                     onTaskSelected={this._onMissionPlannerTaskSelected}
+                                                     onTaskChanged={this._onMissionPlannerTaskChanged}
+                                                     onTaskAdded={this._onMissionPlannerTaskAdded}
+                                                     onTaskDeleted={this._onMissionPlannerTaskDeleted}/>
                         </div>
                     </div>
                 )}
@@ -808,10 +810,14 @@ class MapComponent
 
     _updateMissionPlannerTask(index, task) {
         const mission = this.state.missionPlannerSelectedMission;
-        mission.updatedAt = Date.now();
         mission.tasks[index] = {...task};
         mission.tasks = [...mission.tasks];
 
+        this._updateMissionPlannerMission(mission);
+    }
+
+    _updateMissionPlannerMission(mission) {
+        mission.updatedAt = Date.now();
         const updatedMission = {...mission};
 
         const missionDefinitions = this.state.missionPlannerMissionDefinitions;
@@ -822,6 +828,35 @@ class MapComponent
             missionPlannerSelectedMission: updatedMission,
         });
     }
+
+    _onMissionPlannerTaskAdded = function (task, index) {
+        const mission = this.state.missionPlannerSelectedMission;
+        if (!mission) {
+            return;
+        }
+        const tasks = mission.tasks;
+        tasks.splice(index, 0, task);
+        mission.tasks = [...tasks];
+
+        this._updateMissionPlannerMission(mission);
+    }.bind(this);
+
+    _onMissionPlannerTaskDeleted = function (task, index) {
+        const mission = this.state.missionPlannerSelectedMission;
+        if (!mission) {
+            return;
+        }
+        const tasks = mission.tasks;
+        tasks.splice(index, 1);
+        mission.tasks = [...tasks];
+
+        this._updateMissionPlannerMission(mission);
+
+        this.setState({
+            missionPlannerSelectedTask: null,
+            missionPlannerSelectedTaskIndex: -1,
+        });
+    }.bind(this);
 
     _onMissionPlannerRevertMissionRequested = function (index) {
         const missionDefinitions = this.state.missionDefinitions;

@@ -5,17 +5,17 @@ import {faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import {toast, ToastContainer} from "react-toastify";
 
 import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
-import MissionPlannerTaskComponent from "../map/missionPlanner/MissionPlannerTaskComponent";
-import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
-import CoordSysContext from "../map/CoordSysContext";
+import MissionPlannerTaskComponent from "./MissionPlannerTaskComponent";
+import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
+import CoordSysContext from "../CoordSysContext";
 
 const DEBUG = true;
 
 /**
  * props:
  * - missionDefinitions, selectedMissionIndex, selectedTaskIndex,
- * - onMissionSelected, onTaskSelected, onTaskChanged,
- * - onRevertMissionRequested, onSaveMissionRequested, onDeleteMissionRequested
+ * - onMissionSelected, onRevertMissionRequested, onSaveMissionRequested, onDeleteMissionRequested,
+ * - onTaskSelected, onTaskChanged, onTaskAdded, onTaskDeleted,
  */
 class MissionPlannerComponent
     extends PureComponent {
@@ -79,7 +79,9 @@ class MissionPlannerComponent
                                         <MissionPlannerMissionComponent ref={this.missionViewRef}
                                                                         mission={mission}
                                                                         selectedTaskIndex={this.props.selectedTaskIndex}
-                                                                        onTaskSelected={this.props.onTaskSelected}/>
+                                                                        onTaskSelected={this.props.onTaskSelected}
+                                                                        onTaskAdded={this.props.onTaskAdded}
+                                                                        onTaskDeleted={this.props.onTaskDeleted}/>
                                     )}
                                 </ListGroup.Item>
                             );
