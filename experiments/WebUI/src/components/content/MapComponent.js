@@ -930,44 +930,6 @@ class MapComponent
 
             toast.success('Mission #' + (index + 1) + ' deleted.', TOAST_AUTOCLOSE);
         }
-
-        /*
-        const missions = this.state.missions;
-        const mission = this.state.missions[index];
-        if (mission.createdAt) {
-            missions.splice(index, 1);
-            this.setState({
-                missions: [...missions],
-            });
-            this.context.mission = null;
-            this.context.missionIndex = -1;
-            this.context.task = null;
-            this.context.taskIndex = -1;
-        } else {
-            this.props.management.deleteMission(index)
-                .then(response => {
-                    console.log(response);
-                    toast.success('Mission #' + (index + 1) + ' deleted.');
-
-                    missions.splice(index, 1);
-                    this.setState({
-                        missions: [...missions],
-                    });
-                    this.context.mission = null;
-                    this.context.missionIndex = -1;
-                    this.context.task = null;
-                    this.context.taskIndex = -1;
-
-                    if (this.props.onMissionDeleted) {
-                        this.props.onMissionDeleted(index);
-                    }
-                })
-                .catch(reason => {
-                    console.log('Error: could not delete mission', reason);
-                    toast.error('Failed to delete mission #' + (index + 1) + '.');
-                });
-        }
-         */
     }.bind(this);
 
     // ---- vehicle status ----
