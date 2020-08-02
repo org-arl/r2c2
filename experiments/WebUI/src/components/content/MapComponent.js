@@ -17,7 +17,7 @@ import {
 import {Button, ButtonGroup, ButtonToolbar, Card, Navbar, OverlayTrigger, Popover} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
 
-import {toast} from 'react-toastify';
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import fenceIcon from '../../assets/img/fence.svg';
@@ -481,6 +481,8 @@ class MapComponent
                 )}
 
                 <CursorPositionComponent position={this.state.cursorPosition}/>
+
+                <ToastContainer position="bottom-right"/>
             </CoordSysContext.Provider>
         );
     }
