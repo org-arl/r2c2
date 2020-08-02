@@ -1001,7 +1001,7 @@ class MapComponent
         }
     }
 
-    _simulateVehicleErrorRadius = function() {
+    _simulateVehicleErrorRadius = function () {
         if (this.state.vehicleErrorRadius > 30) {
             this.setState({
                 vehicleErrorRadius: this.state.vehicleErrorRadius - 1,
