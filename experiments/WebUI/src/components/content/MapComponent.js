@@ -242,19 +242,9 @@ class MapComponent
         });
 
         this._setVehicleNotReady();
-        // Simulate vehicle readiness UI
-        setTimeout(() => this._setVehicleReady(), 5000);
 
         // Simulate map position accuracy UI
-        setInterval(
-            () => {
-                if (this.state.vehicleErrorRadius > 30) {
-                    this.setState({
-                        vehicleErrorRadius: this.state.vehicleErrorRadius - 1,
-                    });
-                }
-            },
-            200);
+        this._simulateVehicleErrorRadius();
     }
 
     componentWillUnmount() {
@@ -498,6 +488,7 @@ class MapComponent
             coordSys: coordSys,
             mapCenter: [origin.latitude, origin.longitude],
         }, () => this._fitMapToBounds());
+        this._checkVehicleReadiness();
     }
 
     _updateGeoFence(geoFence) {
@@ -519,6 +510,7 @@ class MapComponent
         if (this.vehicleTrailRef.current) {
             this.vehicleTrailRef.current.addPoint(point);
         }
+        this._checkVehicleReadiness();
     }
 
     _fitMapToBounds() {
@@ -992,6 +984,28 @@ class MapComponent
             vehicleReady: false,
         });
     }
+
+    // TODO Not the actual vehicle readiness check
+    _checkVehicleReadiness() {
+        if (this.state.vehicleReady) {
+            if (!this.state.coordSys || !this.state.vehiclePositionLocal) {
+                this._setVehicleNotReady();
+            }
+        } else {
+            if (this.state.coordSys && this.state.vehiclePositionLocal) {
+                this._setVehicleReady();
+            }
+        }
+    }
+
+    _simulateVehicleErrorRadius = function() {
+        if (this.state.vehicleErrorRadius > 30) {
+            this.setState({
+                vehicleErrorRadius: this.state.vehicleErrorRadius - 1,
+            });
+            setTimeout(this._simulateVehicleErrorRadius, 1000);
+        }
+    }.bind(this);
 
     // ----
 
