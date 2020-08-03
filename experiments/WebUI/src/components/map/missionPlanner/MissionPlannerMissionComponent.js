@@ -1,5 +1,5 @@
 import React, {PureComponent} from "react";
-import {ListGroup} from "react-bootstrap";
+import {Button, ListGroup} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Group, Line} from "pts";
@@ -36,13 +36,16 @@ class MissionPlannerMissionComponent
                                         className={(index === selectedTaskIndex) ? 'active' : ''}
                                         onClick={(e) => this._onSelect(task, index)}
                                         key={index}>
-                            <span>
-                                {this._getType(task)}: {this._toPositionString(task.position)}
-                            </span>
-                            <FontAwesomeIcon className="deleteMissionBtn"
-                                             icon={faTrashAlt}
-                                             onClick={(e) => this._onDelete(e, task, index)}
-                                             title="Delete task"/>
+                            <div className="d-flex justify-content-between">
+                                <span>
+                                    {this._getType(task)}: {this._toPositionString(task.position)}
+                                </span>
+                                <Button onClick={(e) => this._onDelete(e, task, index)}>
+                                    <FontAwesomeIcon color="white"
+                                                     icon={faTrashAlt}
+                                                     title="Delete task"/>
+                                </Button>
+                            </div>
                         </ListGroup.Item>
                     );
                 })}
