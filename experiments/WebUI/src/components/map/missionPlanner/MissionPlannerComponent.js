@@ -1,7 +1,7 @@
 import React, {Fragment, PureComponent} from 'react';
-import {Button, ListGroup, Modal} from 'react-bootstrap';
+import {Accordion, Button, ButtonToolbar, Card, Modal} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
+import {faChevronDown, faChevronUp, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import {toast, ToastContainer} from "react-toastify";
 
 import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
@@ -44,50 +44,70 @@ class MissionPlannerComponent
                 ? selectedMission.tasks[this.props.selectedTaskIndex] : null;
         return (
             <Fragment>
-                <div>
-                    <ul>
-                        {missions.map((mission, index) => {
-                            const isSelected = (this.props.selectedMissionIndex === index);
-                            const isNew = mission.createdAt;
-                            const isModified = mission.updatedAt;
-                            return (
-                                <ListGroup.Item key={index}>
-                                    <div onClick={(e) => this._onMissionSelected(mission, index)}
-                                         className={isSelected ? 'caret caret-down' : 'caret'}>
+                <Accordion defaultActiveKey={-1} onSelect={this._onMissionSelected}>
+                    {missions.map((mission, index) => {
+                        const isSelected = (this.props.selectedMissionIndex === index);
+                        const isNew = mission.createdAt;
+                        const isModified = mission.updatedAt;
+                        return (
+                            <Card key={index}>
+                                <Accordion.Toggle as={Card.Header}
+                                                  eventKey={index}
+                                                  className="d-flex justify-content-between">
+                                    <h5>
                                         {isModified && (
-                                            <span className="editedMission">*</span>
+                                            <span>* </span>
                                         )}
-                                        <span>Mission #{index + 1}</span>
+                                        <span>#{index + 1}</span>
+                                    </h5>
+                                    <ButtonToolbar className="justify-content-end">
                                         {isModified && (
-                                            <FontAwesomeIcon className="saveChangesBtn"
-                                                             icon={faSave}
-                                                             onClick={(e) => this._onSaveChangesRequested(e, mission, index)}
-                                                             title="Save changes"/>
+                                            <Button size="sm"
+                                                    className="ml-1"
+                                                    onClick={(e) => this._onSaveChangesRequested(e, mission, index)}>
+                                                <FontAwesomeIcon color="white"
+                                                                 icon={faSave}
+                                                                 title="Save changes"/>
+                                            </Button>
                                         )}
                                         {isModified && !isNew && (
-                                            <FontAwesomeIcon className="discardChangesBtn"
-                                                             icon={faTimes}
-                                                             onClick={(e) => this._onDiscardChangesRequested(e, mission, index)}
-                                                             title="Discard changes"/>
+                                            <Button size="sm"
+                                                    className="ml-1"
+                                                    onClick={(e) => this._onDiscardChangesRequested(e, mission, index)}>
+                                                <FontAwesomeIcon color="white"
+                                                                 icon={faTimes}
+                                                                 title="Discard changes"/>
+                                            </Button>
                                         )}
-                                        <FontAwesomeIcon className="deleteMissionBtn"
-                                                         icon={faTrashAlt}
-                                                         onClick={(e) => this._onDeleteMissionRequested(e, mission, index)}
-                                                         title="Delete mission"/>
-                                    </div>
-                                    {isSelected && (
-                                        <MissionPlannerMissionComponent ref={this.missionViewRef}
-                                                                        mission={mission}
-                                                                        selectedTaskIndex={this.props.selectedTaskIndex}
-                                                                        onTaskSelected={this.props.onTaskSelected}
-                                                                        onTaskAdded={this.props.onTaskAdded}
-                                                                        onTaskDeleted={this.props.onTaskDeleted}/>
-                                    )}
-                                </ListGroup.Item>
-                            );
-                        })}
-                    </ul>
-                </div>
+                                        <Button size="sm"
+                                                className="ml-1"
+                                                onClick={(e) => this._onDeleteMissionRequested(e, mission, index)}>
+                                            <FontAwesomeIcon color="white"
+                                                             icon={faTrashAlt}
+                                                             title="Delete mission"/>
+                                        </Button>
+                                        <div className="mt-1 mb-1 ml-3">
+                                            <FontAwesomeIcon icon={isSelected ? faChevronUp : faChevronDown}/>
+                                        </div>
+                                    </ButtonToolbar>
+                                </Accordion.Toggle>
+                                <Accordion.Collapse eventKey={index}>
+                                    <Card.Body>
+                                        {isSelected && (
+                                            <MissionPlannerMissionComponent ref={this.missionViewRef}
+                                                                            mission={mission}
+                                                                            selectedTaskIndex={index}
+
+                                                                            onTaskSelected={this.props.onTaskSelected}
+                                                                            onTaskAdded={this.props.onTaskAdded}
+                                                                            onTaskDeleted={this.props.onTaskDeleted}/>
+                                        )}
+                                    </Card.Body>
+                                </Accordion.Collapse>
+                            </Card>
+                        );
+                    })}
+                </Accordion>
 
                 <MissionPlannerTaskComponent task={selectedTask}
                                              onChange={this._onTaskChanged}/>
@@ -173,11 +193,11 @@ class MissionPlannerComponent
 
     // ---- ui events ----
 
-    _onMissionSelected(mission, index) {
+    _onMissionSelected = function (index) {
         if (this.props.onMissionSelected) {
             this.props.onMissionSelected(index);
         }
-    }
+    }.bind(this);
 
     _onTaskChanged = function (task) {
         if (this.props.onTaskChanged) {
