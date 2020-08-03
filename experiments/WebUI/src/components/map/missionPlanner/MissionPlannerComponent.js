@@ -96,7 +96,7 @@ class MissionPlannerComponent
                                         {isSelected && (
                                             <MissionPlannerMissionComponent ref={this.missionViewRef}
                                                                             mission={mission}
-                                                                            selectedTaskIndex={index}
+                                                                            selectedTaskIndex={this.props.selectedTaskIndex}
 
                                                                             onTaskSelected={this.props.onTaskSelected}
                                                                             onTaskAdded={this.props.onTaskAdded}
