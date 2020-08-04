@@ -6,6 +6,14 @@ import {Group, Line} from "pts";
 import StarfishMissions from "../../../lib/StarfishMissions";
 import CoordSysContext from "../CoordSysContext";
 import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
+import {css, StyleSheet} from "aphrodite";
+
+const styles = StyleSheet.create({
+    addTaskComment: {
+        fontSize: "0.75em",
+        color: "#666",
+    },
+});
 
 const DEBUG = true;
 
@@ -49,8 +57,8 @@ class MissionPlannerMissionComponent
                         </ListGroup.Item>
                     );
                 })}
-                <ListGroup.Item className="AddMissionPointComment" key="newTask">
-                    Right-click on map to add mission point
+                <ListGroup.Item className={css(styles.addTaskComment)} key="newTask">
+                    Right-click on map to add a new task
                 </ListGroup.Item>
             </ListGroup>
         );

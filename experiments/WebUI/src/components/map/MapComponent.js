@@ -31,7 +31,6 @@ import ToolbarComponent from "../ToolbarComponent";
 
 import MissionPlannerComponent from "./missionPlanner/MissionPlannerComponent";
 import MissionPlannerMapElement from "./missionPlanner/MissionPlannerMapElement";
-import "../../assets/MissionPlanner.css";
 
 import CoordSysContext from "./CoordSysContext";
 import CursorPositionComponent from "./CursorPositionComponent";
