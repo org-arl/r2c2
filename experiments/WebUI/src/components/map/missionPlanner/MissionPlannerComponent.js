@@ -44,7 +44,9 @@ class MissionPlannerComponent
                 ? selectedMission.tasks[this.props.selectedTaskIndex] : null;
         return (
             <Fragment>
-                <Accordion defaultActiveKey={-1} onSelect={this._onMissionSelected}>
+                <Accordion defaultActiveKey={-1}
+                           activeKey={this.props.selectedMissionIndex + 1}
+                           onSelect={this._onMissionSelected}>
                     {missions.map((mission, index) => {
                         const isSelected = (this.props.selectedMissionIndex === index);
                         const isNew = mission.createdAt;
@@ -52,7 +54,7 @@ class MissionPlannerComponent
                         return (
                             <Card key={index}>
                                 <Accordion.Toggle as={Card.Header}
-                                                  eventKey={index}
+                                                  eventKey={index + 1}
                                                   className="d-flex justify-content-between">
                                     <h5>
                                         {isModified && (
@@ -93,7 +95,7 @@ class MissionPlannerComponent
                                         </div>
                                     </ButtonToolbar>
                                 </Accordion.Toggle>
-                                <Accordion.Collapse eventKey={index}>
+                                <Accordion.Collapse eventKey={index + 1}>
                                     <Card.Body>
                                         {isSelected && (
                                             <MissionPlannerMissionComponent ref={this.missionViewRef}
@@ -197,7 +199,7 @@ class MissionPlannerComponent
 
     _onMissionSelected = function (index) {
         if (this.props.onMissionSelected) {
-            this.props.onMissionSelected(index);
+            this.props.onMissionSelected(index - 1);
         }
     }.bind(this);
 
