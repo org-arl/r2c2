@@ -73,6 +73,7 @@ class MissionPlannerComponent
                                         {isModified && !isNew && (
                                             <Button size="sm"
                                                     className="ml-1"
+                                                    variant="warning"
                                                     onClick={(e) => this._onDiscardChangesRequested(e, mission, index)}>
                                                 <FontAwesomeIcon color="white"
                                                                  icon={faTimes}
@@ -81,6 +82,7 @@ class MissionPlannerComponent
                                         )}
                                         <Button size="sm"
                                                 className="ml-1"
+                                                variant="danger"
                                                 onClick={(e) => this._onDeleteMissionRequested(e, mission, index)}>
                                             <FontAwesomeIcon color="white"
                                                              icon={faTrashAlt}
