@@ -13,6 +13,12 @@ const styles = StyleSheet.create({
         fontSize: "0.75em",
         color: "#666",
     },
+    taskName: {
+        fontWeight: "bold",
+    },
+    taskPosition: {
+        fontSize: "0.8em",
+    },
 });
 
 const DEBUG = true;
@@ -46,7 +52,8 @@ class MissionPlannerMissionComponent
                                         key={index}>
                             <div className="d-flex justify-content-between">
                                 <div>
-                                    {this._getType(task)}: {this._toPositionString(task.position)}
+                                    <div className={css(styles.taskName)}>{this._getType(task)}</div>
+                                    <div className={css(styles.taskPosition)}>{this._toPositionString(task.position)}</div>
                                 </div>
                                 <div>
                                     <div className="btn btn-danger btn-sm"
@@ -173,9 +180,9 @@ class MissionPlannerMissionComponent
 
     _toPositionString(position) {
         return [
-            position.x.toFixed(2),
-            position.y.toFixed(2),
-            position.z.toFixed(2),
+            position.x.toFixed(1),
+            position.y.toFixed(1),
+            position.z.toFixed(1),
         ].join(", ");
     }
 
