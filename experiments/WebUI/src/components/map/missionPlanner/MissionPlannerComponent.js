@@ -2,12 +2,17 @@ import React, {Fragment, PureComponent} from 'react';
 import {Accordion, Button, ButtonToolbar, Card, Modal} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faChevronDown, faChevronUp, faSave, faTimes, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
-import {toast, ToastContainer} from "react-toastify";
+import {toast} from "react-toastify";
 
 import MissionPlannerMissionComponent from "./MissionPlannerMissionComponent";
 import MissionPlannerTaskComponent from "./MissionPlannerTaskComponent";
 import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
 import CoordSysContext from "../CoordSysContext";
+
+const TOAST_AUTOCLOSE = {
+    position: toast.POSITION.BOTTOM_RIGHT,
+    autoClose: true,
+};
 
 const DEBUG = true;
 
@@ -181,8 +186,6 @@ class MissionPlannerComponent
                         </Button>
                     </Modal.Footer>
                 </Modal>
-
-                <ToastContainer/>
             </Fragment>
         );
     }
@@ -258,7 +261,7 @@ class MissionPlannerComponent
         if (this.props.onRevertMissionRequested) {
             const index = this.state.discardChangesMissionIndex;
             if (this.props.onRevertMissionRequested(index)) {
-                toast.success('Changes to mission #' + (index + 1) + ' discarded.');
+                toast.success('Changes to mission #' + (index + 1) + ' discarded.', TOAST_AUTOCLOSE);
             }
         }
         this.setState({

@@ -19,7 +19,7 @@ import {
 import {Button, ButtonGroup, ButtonToolbar, Card, Navbar, OverlayTrigger, Popover} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
 
-import {toast, ToastContainer} from 'react-toastify';
+import {toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import pathIcon from '../../assets/img/path.svg';
 
@@ -41,8 +41,6 @@ import VehicleMapElement from "./VehicleMapElement";
 import VehicleTrailMapElement from "./VehicleTrailMapElement";
 
 console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
-
-toast.configure();
 
 const tileUrl = process.env.REACT_APP_MAP_TILE_URL
     ? process.env.REACT_APP_MAP_TILE_URL
@@ -479,8 +477,6 @@ class MapComponent
                 )}
 
                 <CursorPositionComponent position={this.state.cursorPosition}/>
-
-                <ToastContainer position="bottom-right"/>
             </CoordSysContext.Provider>
         );
     }
