@@ -1,11 +1,13 @@
-import React, {Fragment} from 'react'
+import React, {Fragment, PureComponent} from 'react'
 import {Map as LeafletMap, TileLayer} from 'react-leaflet';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {
     faBan,
     faCrosshairs,
     faDrawPolygon,
+    faEye,
     faHome,
+    faPlay,
     faPlus,
     faQuestion,
     faRoute,
@@ -16,7 +18,7 @@ import {
     faUndo,
     faWindowClose,
 } from '@fortawesome/free-solid-svg-icons'
-import {Button, ButtonGroup, ButtonToolbar, Card, Navbar, OverlayTrigger, Popover} from 'react-bootstrap';
+import {Button, ButtonGroup, ButtonToolbar, Card, Dropdown, Navbar, OverlayTrigger, Popover} from 'react-bootstrap';
 import {css, StyleSheet} from 'aphrodite';
 
 import {toast} from 'react-toastify';
@@ -76,6 +78,10 @@ const styles = StyleSheet.create({
     missionPlanner: {
         overflowY: "auto",
     },
+    mapButtonGroup: {
+        marginRight: "16px",
+        marginBottom: "8px",
+    },
 });
 
 const MODE_NONE = 0;
@@ -109,7 +115,7 @@ const geofenceEditorPopover = (
 );
 
 class MapComponent
-    extends React.Component {
+    extends PureComponent {
 
     constructor(props, context) {
         super(props, context);
@@ -313,7 +319,7 @@ class MapComponent
 
                 <div className={css(styles.toolbar)}>
                     <ButtonToolbar>
-                        <ButtonGroup className="map-button-group">
+                        <ButtonGroup className={css(styles.mapButtonGroup)}>
                             <ToolbarComponent onClick={this._openWindow}/>
                             <Button onClick={this._onCloseAllWindows}>
                                 <FontAwesomeIcon icon={faWindowClose} title="Close all child windows"/>
@@ -321,32 +327,36 @@ class MapComponent
                         </ButtonGroup>
 
                         {inNormalMode && (
-                            <ButtonGroup className="map-button-group">
-                                <div className="dropdown_styles">
-                                    <Button>Missions</Button>
-                                    <div className="dropdown_content">
-                                        {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => {
-                                            return (
-                                                <div key={index}>
-                                                    #{index + 1}
-                                                    &nbsp;
-                                                    <Button onClick={(e) => this._onViewMission(mission, index)}>
-                                                        View
-                                                    </Button>
-                                                    &nbsp;
-                                                    <Button onClick={(e) => this._onRunMission(mission, index)}
-                                                            disabled={!inNormalMode}>
-                                                        Run
-                                                    </Button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                            <ButtonGroup className={css(styles.mapButtonGroup)}>
+                                <Dropdown>
+                                    <Dropdown.Toggle>
+                                        Missions
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => (
+                                            <Dropdown.Item>
+                                                <span className="mr-4">#{index + 1}</span>
+                                                <Button onClick={(e) => this._onViewMission(e, mission, index)}
+                                                        title="View"
+                                                        className="ml-1">
+                                                    <FontAwesomeIcon icon={faEye}
+                                                                     color="white"/>
+                                                </Button>
+                                                <Button onClick={(e) => this._onRunMission(e, mission, index)}
+                                                        title="Run"
+                                                        className="ml-1"
+                                                        disabled={!inNormalMode}>
+                                                    <FontAwesomeIcon icon={faPlay}
+                                                                     color="white"/>
+                                                </Button>
+                                            </Dropdown.Item>
+                                        ))}
+                                    </Dropdown.Menu>
+                                </Dropdown>
                             </ButtonGroup>
                         )}
 
-                        <ButtonGroup className="map-button-group">
+                        <ButtonGroup className={css(styles.mapButtonGroup)}>
                             <Button onClick={this._onRecentreMap}>
                                 <FontAwesomeIcon icon={faCrosshairs} title="Re-center map"/>
                             </Button>
@@ -370,7 +380,7 @@ class MapComponent
                         </ButtonGroup>
 
                         {inNormalMode && (
-                            <ButtonGroup className="map-button-group">
+                            <ButtonGroup className={css(styles.mapButtonGroup)}>
                                 <Button onClick={this._onAbortMission}>
                                     <FontAwesomeIcon icon={faBan} title="Abort mission"/>
                                 </Button>
@@ -384,7 +394,7 @@ class MapComponent
                         )}
 
                         {inNormalMode && (
-                            <ButtonGroup className="map-button-group">
+                            <ButtonGroup className={css(styles.mapButtonGroup)}>
                                 <Button onClick={this._onToggleGeofenceEditor}>
                                     Edit geofence
                                 </Button>
@@ -392,7 +402,7 @@ class MapComponent
                         )}
 
                         {inNormalMode && (
-                            <ButtonGroup className="map-button-group">
+                            <ButtonGroup className={css(styles.mapButtonGroup)}>
                                 <Button active={inMissionPlanner}
                                         onClick={this._onToggleMissionPlanner}>
                                     Mission Planner
@@ -599,14 +609,14 @@ class MapComponent
 
     // ---- mission viewer/runner event handlers
 
-    _onViewMission(mission, index) {
+    _onViewMission(e, mission, index) {
         this.setState({
             displayMission: true,
             mission: mission,
         });
     }
 
-    _onRunMission(mission, index) {
+    _onRunMission(e, mission, index) {
         // TODO Handle edited missions
         this._onViewMission(mission, index);
         this.management.runMission(index + 1);
