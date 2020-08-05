@@ -1,178 +1,65 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-.leaflet-container{
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.mainBlock_custom{
-  width: 100%;
-  padding-left: 15px;
-}
-
-.toggleBtn{
-  display: none !important;
-}
-
-/* .menu_custom{
-  margin-top: 52px;
-} */
-
-.sidebarContainer_custom{
-  background-color: #363740;
-  width: 100%;
-  padding: 7px;
-}
-
-
-
-/* @media screen and (max-width: 992px) { */
-  .sidebar_custom {
+.leaflet-container {
+    position: absolute;
     top: 0;
-    left: 0;
-    /* width: 0px; */
-    overflow-x: hidden;
-    position: fixed;
-    z-index: 10000;
-    /* -webkit-transition: all 500ms ease;
-    transition: all 500ms ease; */
-  }
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
 
-  .sidebarContainer_custom{
+/* SidebarComponent */
+
+.toggleBtn {
+    display: none !important;
+}
+
+.sidebarContainer_custom {
+    background-color: #363740;
+    width: 100%;
+    padding: 7px;
+}
+
+.sidebarContainer_custom {
     padding-left: 4px !important;
     padding-right: 4px !important;
-	border-radius: 5px;
+    border-radius: 5px;
     margin: auto;
-  }
+}
 
-  .mainBlock_custom{
-  }
-
-  .toggleBtn{
+.toggleBtn {
     display: inline !important;
-  }
+}
 
-  .menu_custom{
+.menu_custom {
     display: none !important;
-  }
+}
 
-  .sidebarActive{
+.sidebarActive {
     top: 0;
     left: 0;
     /* width: 300px; */
     overflow-x: auto;
     position: fixed;
-  }
-
-  .mainBlockPushRight{
-  }
-
-/************ Sentuator styles ***********8*/
-
-.select_styles{
-	width: 100%;
 }
 
-.sentuator_list{
-	font-size: 0.8em;
-	z-index: 0;
-	width: 90%;
-	height: 250px;
-	overflow-y: scroll;
+.mainBlockPushRight {
 }
 
-.sentuator_container{
-	padding-top: 20px;
-	padding-left: 0 !important;
-	width: 50%;
+/* SentuatorsComponent */
+
+.select_styles {
+    width: 100%;
 }
 
-
-/************** Map styles *************/
-.dropdown_styles{
-	position: relative;
-	display: inline-block;
-	margin-left: 15px;
+.sentuator_list {
+    font-size: 0.8em;
+    z-index: 0;
+    width: 90%;
+    height: 250px;
+    overflow-y: scroll;
 }
 
-.dropdown_content{
-	display: none;
-	position: absolute;
-	background-color: #f1f1f1;
-	min-width: 160px;
-	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-	z-index: 1001;
-}
-
-.dropdown_content div {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-}
-
-.dropdown_content div Button{
-  font-size: 0.75em;
-}
-
-.dropdown_content div:hover {background-color: #ddd;}
-
-.dropdown_styles:hover .dropdown_content {display: block;}
-
-.mission_options{
-	margin-left: 15px;
-}
-/******* DrawGeoFence styles *******/
-.drawGeoFence_styles{
-	position: relative;
-	display: inline-block;
-	margin-left: 15px;
-}
-
-.drawGeoFence_content{
-	position: absolute;
-	background-color: #f1f1f1;
-	/* min-width: 160px; */
-	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-	z-index: 1001;
-}
-
-.drawGeoFence_content Button {
-	margin: 3px;
-}
-
-/*******  Script Control  ********/
-.subroutine_select_styles{
-	width: 150px;
+.sentuator_container {
+    padding-top: 20px;
+    padding-left: 0 !important;
+    width: 50%;
 }

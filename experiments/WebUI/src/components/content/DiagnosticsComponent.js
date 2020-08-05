@@ -1,147 +1,210 @@
 import React from 'react'
-import { Table } from 'react-bootstrap';
+import {Button, ButtonToolbar, Navbar, Table} from 'react-bootstrap';
 
-import { FjageHelper } from "../../assets/fjageHelper.js";
-import { Management } from "../../assets/jc2.js";
-import { StyleSheet, css } from 'aphrodite';
+import {FjageHelper} from "../../assets/fjageHelper.js";
+import {Management} from "../../assets/jc2.js";
+import {css, StyleSheet} from 'aphrodite';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
-import {Container, Row} from 'react-bootstrap';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faCheck, faSync, faTimes} from '@fortawesome/free-solid-svg-icons'
+import {toast} from "react-toastify";
+
+toast.configure();
+
+const TOAST_OPTIONS = {
+    position: toast.POSITION.BOTTOM_RIGHT,
+    autoClose: true,
+};
 
 const styles = StyleSheet.create({
-    table_styles: {
-    	fontSize: "0.75em"
+    container: {
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    },
+    content: {
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: "auto",
+        height: "100%",
+        overflowX: "auto",
+        overflowY: "auto",
+    },
+    tableContainer: {
+        fontSize: "0.75em",
     },
     errorRow: {
-    	backgroundColor: "#ffbfba"
-    }
+        backgroundColor: "#ffbfba"
+    },
 });
 
-class DiagnosticsComponent extends React.Component {
-	constructor(props, context) {
-		super(props, context);
+const TICK = <FontAwesomeIcon icon={faCheck} color="green"/>;
+const CROSS = <FontAwesomeIcon icon={faTimes} color="red"/>;
 
-		this.gateway = FjageHelper.getGateway();
+const HEALTH_MAP = {
+    "OFFLINE": {
+        online: false,
+        healthy: null,
+        data: null,
+        type: 'error',
+    },
+    "MALFUNCTION": {
+        online: true,
+        healthy: false,
+        data: null,
+        type: 'error',
+    },
+    "UNAVAILABLE": {
+        online: true,
+        healthy: true,
+        data: false,
+        type: 'error',
+    },
+    "HEALTHY": {
+        online: true,
+        healthy: true,
+        data: true,
+        type: null,
+    },
+};
 
-		this.state = {
-			diagnostics: []
+const DEFAULT_HEALTH = {
+    online: null,
+    healthy: null,
+    data: null,
+    type: null,
+}
 
-		};
+function getHealthDescriptor(health) {
+    let healthDescriptor = HEALTH_MAP[health];
+    if (!healthDescriptor) {
+        healthDescriptor = DEFAULT_HEALTH;
+    }
+    return healthDescriptor;
+}
 
-	}
+function getSubStatusIcon(value) {
+    if (value === null) {
+        return null;
+    } else if (value) {
+        return TICK;
+    } else {
+        return CROSS;
+    }
+}
 
-	componentDidMount() {
+class DiagnosticsComponent
+    extends React.Component {
 
-		this.gateway.addConnListener((connected) => {
-			if (connected) {
-				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
-				this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
+    constructor(props, context) {
+        super(props, context);
 
-				this.management = new Management(this.gateway);
+        this.gateway = FjageHelper.getGateway();
 
-				this.management.getVehicleId()
-					.then(vehicleId => {
-						console.log('vehicleId', vehicleId);
-						this.vehicleId = vehicleId;
-					})
-					.catch(reason => {
-						console.log('could not get vehicle ID', reason);
-					});
+        this.state = {
+            diagnostics: [],
+        };
+    }
 
-				this.management.getHealth()
-				.then(response => {
-					// console.log(response);
-					this.setState({
-						diagnostics: response
-					});
-				})
-				.catch(reason => {
-					console.log('could not get health', reason);
-				});
-			}
-		});
+    componentDidMount() {
+        this.gateway.addConnListener((connected) => {
+            if (connected) {
+                this.management = new Management(this.gateway);
 
+                this.management.getVehicleId()
+                    .then(vehicleId => {
+                        console.log('vehicleId', vehicleId);
+                        this.vehicleId = vehicleId;
+                    })
+                    .catch(reason => {
+                        console.log('could not get vehicle ID', reason);
+                    });
 
-	}
+                this._onRefresh();
+            }
+        });
+    }
 
-	componentDidUpdate() {
+    componentWillUnmount() {
+        this.gateway.close();
+    }
 
+    render() {
+        if (this.vehicleId) {
+            document.title = this.vehicleId + " Diagnostics";
+        } else {
+            document.title = "Diagnostics";
+        }
 
-	}
+        const errorClass = css(styles.errorRow);
 
-	componentWillUnmount() {
-		this.gateway.close();
-	}
+        return (
+            <div className={css(styles.container)}>
+                <Navbar bg="light">
+                    <Navbar.Brand>Diagnostics</Navbar.Brand>
+                    <Navbar.Collapse className="justify-content-end">
+                        <ButtonToolbar>
+                            <Button title="Refresh"
+                                    size="sm"
+                                    onClick={this._onRefresh}
+                                    className="ml-1">
+                                <FontAwesomeIcon icon={faSync} color="white"/>
+                            </Button>
+                        </ButtonToolbar>
+                    </Navbar.Collapse>
+                </Navbar>
+                <div className={css(styles.content)}>
+                    <div className={css(styles.tableContainer)}>
+                        <Table striped bordered hover size="sm">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th className="text-center">Online</th>
+                                <th className="text-center">Healthy</th>
+                                <th className="text-center">Data</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {this.state.diagnostics.map((entry, index) => {
+                                const healthDescriptor = getHealthDescriptor(entry.health);
+                                let rowClass = null;
+                                if (healthDescriptor.type === 'error') {
+                                    rowClass = errorClass;
+                                }
+                                return (
+                                    <tr key={index} className={rowClass}>
+                                        <td>{index + 1}</td>
+                                        <td>{entry.name}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.online)}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.healthy)}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.data)}</td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </Table>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-	render() {
-		if (this.vehicleId) {
-			document.title = this.vehicleId + " Diagnostics";
-		} else {
-			document.title = "Diagnostics";
-		}
-		// console.log(this.state.diagnostics);
-		var diagnosticsRows = [];
-		for (var i = 0; i < this.state.diagnostics.length; i++) {
-			var status = [];
-			const tick = <FontAwesomeIcon icon={faCheck} color="green" />;
-			const cross = <FontAwesomeIcon icon={faTimes} color="red" />;
-			const errorClass = css(styles.errorRow);
-			var addClass = null;
-			switch(this.state.diagnostics[i].health){
-				case "OFFLINE":
-					addClass = errorClass;
-					status = [cross,,];
-					break;
-				case "MALFUNCTION":
-					addClass = errorClass;
-					status = [tick,cross,];
-					break;
-				case "UNAVAILABLE":
-					addClass = errorClass;
-					status = [tick,tick,cross];
-					break;
-				case "HEALTHY":
-					status = [tick,tick,tick];
-					break;
-			}
-			diagnosticsRows.push(
-				<tr key={i} className={addClass}>
-					<td>{i+1}</td>
-					<td>{this.state.diagnostics[i].name}</td>
-					<td>{status[0]}</td>
-					<td>{status[1]}</td>
-					<td>{status[2]}</td>
-				</tr>
-			);
-		}
-
-		return (
-			<Container>
-				<Row>
-					<h3>Diagnostics</h3>
-				</Row>
-				<Row>
-					<Table striped bordered hover size="sm" className={css(styles.table_styles)}>
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Name</th>
-								<th>Online</th>
-								<th>Healthy</th>
-								<th>Data</th>
-							</tr>
-						</thead>
-						<tbody>
-							{diagnosticsRows}
-						</tbody>
-					</Table>
-				</Row>
-			</Container>
-
-
-		);
-	}
+    _onRefresh = function () {
+        this.management.getHealth()
+            .then(response => {
+                // console.log(response);
+                this.setState({
+                    diagnostics: response
+                });
+                toast.success("Diagnostics refreshed", TOAST_OPTIONS);
+            })
+            .catch(reason => {
+                console.log('could not get health', reason);
+                toast.error("Failed to refresh diagnostics", TOAST_OPTIONS);
+            });
+    }.bind(this);
 }
 
 export default DiagnosticsComponent;

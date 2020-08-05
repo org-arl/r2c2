@@ -53,7 +53,6 @@ export class Management {
      * @param {int} missionNumber Mission number.
      */
     runMission(missionNumber) {
-		console.log(missionNumber);
         this.getVehicleId()
             .then(vehicleId => {
                 const request = new OperatorCmdReq({
@@ -113,7 +112,6 @@ export class Management {
                     cmd: 'STATIONKEEPING',
                     vehicleID: vehicleId
                 });
-				console.log(request);
                 // NOTE: no response expected
                 this._gateway.send(request);
             });
@@ -122,7 +120,7 @@ export class Management {
     /**
      * Gets missions.
      *
-     * @returns {Promise<Array>} Promise returning the missions.
+     * @returns {Promise<Object>} Promise returning the missions.
      */
     getMissions() {
         return this._waitForReady()
@@ -133,9 +131,8 @@ export class Management {
                     });
                     this._gateway.request(request)
                         .then(response => {
-                            console.log('getMissions', response);
                             if (response.perf === Performative.INFORM) {
-                                resolve(response.missions);
+                                resolve(response.missionDefinitions);
                             } else {
                                 reject(response.perf);
                             }
@@ -147,17 +144,43 @@ export class Management {
 	/**
      * Updates a mission.
      *
-     * @returns {Promise<Array>}
+     * @param updatedMissionDefinition {Object} Updated mission definition.
+     * @param missionNumber {int} Mission number (0-based).
+     * @returns {Promise<String>}
      */
-    updateMission(updatedMission, missionNumber) {
-		console.log(updatedMission);
-		console.log(missionNumber);
+    updateMission(updatedMissionDefinition, missionNumber) {
         return this._waitForReady()
             .then(management => {
                 return new Promise((resolve, reject) => {
                     const request = new UpdateMissionReq({
                         recipient: this._managementAgentId,
-                        mission: updatedMission,
+                        missionDefinition: updatedMissionDefinition,
+                        missionNumber: missionNumber
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.perf);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+    /**
+     * Deletes a mission.
+     *
+     * @param missionNumber {int} Mission number (0-based).
+     * @returns {Promise<String>}
+     */
+    deleteMission(missionNumber) {
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new DeleteMissionReq({
+                        recipient: this._managementAgentId,
                         missionNumber: missionNumber
                     });
                     this._gateway.request(request)
@@ -238,7 +261,6 @@ export class Management {
     }
 
     updateGeofence(updatedGeofence) {
-		console.log(updatedGeofence);
         return this._waitForReady()
             .then(management => {
                 return new Promise((resolve, reject) => {
@@ -418,6 +440,26 @@ export class Management {
                         .then(response => {
                             if (response.perf === Performative.INFORM) {
                                 resolve(response.measurement);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
+
+    getDashboard(maxAge) {
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new GetDashboardReq({
+                        recipient: this._managementAgentId,
+                        maxAge: maxAge,
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.items);
                             } else {
                                 reject(response.perf);
                             }
@@ -637,5 +679,29 @@ export class UpdateMissionReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.UpdateMissionReq', params);
+    }
+}
+
+export class DeleteMissionReq extends AbstractRequest {
+
+    /**
+     * Constructs a DeleteMissionReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.DeleteMissionReq', params);
+    }
+}
+
+export class GetDashboardReq extends AbstractRequest {
+
+    /**
+     * Constructs a GetDashboardReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.GetDashboardReq', params);
     }
 }

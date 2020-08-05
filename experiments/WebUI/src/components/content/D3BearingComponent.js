@@ -2,8 +2,6 @@ import React from 'react';
 import * as d3 from "d3";
 import '../../assets/gauge.css';
 
-import MyIcon from '../../assets/img/submarine-front-view.svg';
-
 class D3BearingComponent extends React.Component{
 
 	static defaultProps = {
@@ -185,7 +183,7 @@ class D3BearingComponent extends React.Component{
 	}
 
 	setTarget(newValue) {
-		const r = this.props.size / 2;
+		//const r = this.props.size / 2;
 
 		const ratio1 = this.scale(newValue);
 		const newAngle1 = this.props.minAngle + (ratio1 * this.range);

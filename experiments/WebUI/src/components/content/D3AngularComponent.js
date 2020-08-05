@@ -2,9 +2,7 @@ import React from 'react';
 import * as d3 from "d3";
 import '../../assets/gauge.css';
 
-import FrontIcon from '../../assets/img/submarine-front-view.svg';
 import SideIcon from '../../assets/img/submarine-side-view.svg';
-
 
 class D3AngularComponent extends React.Component{
 
@@ -50,7 +48,7 @@ class D3AngularComponent extends React.Component{
 	}
 
 	componentDidMount() {
-		this.renderD3Gauge();
+		this.renderD3Gauge(0);
 	}
 
 	componentDidUpdate(prevProps) {
@@ -212,7 +210,7 @@ class D3AngularComponent extends React.Component{
 			this.submarineSVG.attr("height", this.props.iconHeight)
 					.attr('transform', 'translate(' + r + ', ' + r + ') rotate(0) translate(-' + r + ', -' + this.props.iconHeight / 2 + ')');
 
-			this.update(30);
+			this.update(newValue);
 			this.setTarget(0);
 		})
 
@@ -250,7 +248,7 @@ class D3AngularComponent extends React.Component{
 	}
 
 	setTarget(newValue) {
-		const r = this.props.size / 2;
+		//const r = this.props.size / 2;
 
 		const ratio1 = this.scale(newValue);
 		const newAngle1 = this.props.minAngle + (ratio1 * this.range);
