@@ -47,7 +47,11 @@ class DashboardComponent
             pitch: 0.0,
             roll: 0.0,
             yaw: 0.0,
-            speed: 0.0
+            thrust: 0.0,
+            speed: 0.0,
+            rudder: 0.0,
+            lElevator: 0.0,
+            rElevator: 0.0,
         }
     }
 
@@ -193,7 +197,7 @@ class DashboardComponent
                             <div className={css(styles.gaugeContainer)}>
                                 <D3GaugeComponent title="Thrust"
                                                   ref="Thrust"
-                                                  val={0.0}
+                                                  val={this.state.thrust}
                                                   minValue={-100}
                                                   maxValue={100}/>
                             </div>
@@ -219,21 +223,21 @@ class DashboardComponent
                             <div className={css(styles.gaugeContainer)}>
                                 <D3GaugeComponent title="LElevator"
                                                   ref="LElevator"
-                                                  val={this._radiansToDegrees(0.0)}
+                                                  val={this._radiansToDegrees(this.state.lElevator)}
                                                   minValue={-90}
                                                   maxValue={90}/>
                             </div>
                             <div className={css(styles.gaugeContainer)}>
                                 <D3GaugeComponent title="Rudder"
                                                   ref="Rudder"
-                                                  val={this._radiansToDegrees(0.0)}
+                                                  val={this._radiansToDegrees(this.state.rudder)}
                                                   minValue={-90}
                                                   maxValue={90}/>
                             </div>
                             <div className={css(styles.gaugeContainer)}>
                                 <D3GaugeComponent title="RElevator"
                                                   ref="RElevator"
-                                                  val={this._radiansToDegrees(0.0)}
+                                                  val={this._radiansToDegrees(this.state.rElevator)}
                                                   minValue={-90}
                                                   maxValue={90}/>
                             </div>
@@ -245,8 +249,38 @@ class DashboardComponent
     }
 
     _onRefresh = function () {
-        // TODO
+        this.management.getDashboard(1.0)
+            .then(items => {
+                this._handleDashboardResponse(items);
+            })
+            .catch(reason => {
+                console.log('error getting dashboard data', reason)
+            });
     }.bind(this);
+
+    _handleDashboardResponse(items) {
+        console.log(items);
+        if (!items) {
+            return;
+        }
+        const state = {};
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const itemId = item.descriptor.id;
+            if (itemId === 'roll') {
+                state.roll = item.value;
+            } else if (itemId === 'pitch') {
+                state.pitch = item.value;
+            } else if (itemId === 'bearing') {
+                state.bearing = item.value;
+            } else if (itemId === 'thrust') {
+                state.thrust = item.value;
+            } else if (itemId === 'speed') {
+                state.speed = item.value;
+            }
+        }
+        this.setState(state);
+    }
 
     _updateVehicleId(vehicleId) {
         if (vehicleId) {

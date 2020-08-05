@@ -447,6 +447,26 @@ export class Management {
                 });
             });
     }
+
+    getDashboard(maxAge) {
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new GetDashboardReq({
+                        recipient: this._managementAgentId,
+                        maxAge: maxAge,
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.items);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
 }
 
 // ----
@@ -671,5 +691,17 @@ export class DeleteMissionReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.DeleteMissionReq', params);
+    }
+}
+
+export class GetDashboardReq extends AbstractRequest {
+
+    /**
+     * Constructs a GetDashboardReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.GetDashboardReq', params);
     }
 }
