@@ -618,7 +618,7 @@ class MapComponent
 
     _onRunMission(e, mission, index) {
         // TODO Handle edited missions
-        this._onViewMission(mission, index);
+        this._onViewMission(e, mission, index);
         this.management.runMission(index + 1);
         // TODO Currently there is no response from JC2
         toast.info("Run mission #" + (index + 1) + " requested.", TOAST_AUTOCLOSE);
