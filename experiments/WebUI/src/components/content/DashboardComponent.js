@@ -115,7 +115,7 @@ class DashboardComponent
                 this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
                 this.gateway.addMessageListener((msg) => {
                     if (msg.__clazz__ === 'org.arl.jc2.messages.VehicleStatus') {
-                        this.setState({
+                        const state = {
                             xCoordinate: msg.pos.x,
                             yCoordinate: msg.pos.y,
                             zCoordinate: msg.pos.z,
@@ -126,7 +126,8 @@ class DashboardComponent
                             roll: msg.roll,
                             yaw: msg.yaw,
                             speed: msg.speed,
-                        });
+                        };
+                        this.setState(state);
                     }
                 });
 
