@@ -1,9 +1,33 @@
 # StarControl 2020 Web UI
 
+## Releases
+
+Audience: Users
+
+Simulator+WebUI releases can be found at https://github.com/org-arl/r2c2/releases (starfish-simulator)
+
+### Instructions
+
+* Pre-requisites
+    * JDK 8
+* Download starfish-simulator.zip
+* Unzip starfish-simulator.zip
+* Run the command: `./run.sh`
+* Open a browser (preferable Chrome/Firefox) and open http://localhost:8888
+
 ## Development
 
+Audience: Developers
+
 This section contains instructions on the development process.
-See also [Create React App](https://create-react-app.dev/).
+
+The WebUI uses the React framework
+* [React](https://reactjs.org/)
+* [Create React App](https://create-react-app.dev/)
+
+The WebUI uses fjage's Javascript gateway for communications
+* [fjage](https://github.com/org-arl/fjage)
+* [fjage Javascript gateway](https://fjage.readthedocs.io/en/latest/jsgw.html)
 
 ### Pre-requisites
 
@@ -12,7 +36,7 @@ See also [Create React App](https://create-react-app.dev/).
 
 ### Download simulator
 
-* https://github.com/org-arl/r2c2/releases/download/starfish-simulator-20200417-1230/starfish-simulator.zip
+* https://github.com/org-arl/r2c2/releases/ (starfish-simulator.zip)
 
 ### Install packages
 
