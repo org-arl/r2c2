@@ -48,7 +48,7 @@ class D3AngularComponent extends React.Component{
 	}
 
 	componentDidMount() {
-		this.renderD3Gauge();
+		this.renderD3Gauge(0);
 	}
 
 	componentDidUpdate(prevProps) {
@@ -210,7 +210,7 @@ class D3AngularComponent extends React.Component{
 			this.submarineSVG.attr("height", this.props.iconHeight)
 					.attr('transform', 'translate(' + r + ', ' + r + ') rotate(0) translate(-' + r + ', -' + this.props.iconHeight / 2 + ')');
 
-			this.update(30);
+			this.update(newValue);
 			this.setTarget(0);
 		})
 
