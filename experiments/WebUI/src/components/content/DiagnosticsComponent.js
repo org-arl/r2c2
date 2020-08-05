@@ -1,20 +1,42 @@
 import React from 'react'
-import {Container, Row, Table} from 'react-bootstrap';
+import {Button, ButtonToolbar, Navbar, Table} from 'react-bootstrap';
 
 import {FjageHelper} from "../../assets/fjageHelper.js";
 import {Management} from "../../assets/jc2.js";
 import {css, StyleSheet} from 'aphrodite';
 
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faCheck, faTimes} from '@fortawesome/free-solid-svg-icons'
+import {faCheck, faSync, faTimes} from '@fortawesome/free-solid-svg-icons'
+import {toast} from "react-toastify";
+
+toast.configure();
+
+const TOAST_OPTIONS = {
+    position: toast.POSITION.BOTTOM_RIGHT,
+    autoClose: true,
+};
 
 const styles = StyleSheet.create({
-    table_styles: {
-        fontSize: "0.75em"
+    container: {
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    },
+    content: {
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: "auto",
+        height: "100%",
+        overflowX: "auto",
+        overflowY: "auto",
+    },
+    tableContainer: {
+        fontSize: "0.75em",
     },
     errorRow: {
         backgroundColor: "#ffbfba"
-    }
+    },
 });
 
 const TICK = <FontAwesomeIcon icon={faCheck} color="green"/>;
@@ -88,9 +110,6 @@ class DiagnosticsComponent
     componentDidMount() {
         this.gateway.addConnListener((connected) => {
             if (connected) {
-                this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.VEHICLESTATUS'));
-                this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
-
                 this.management = new Management(this.gateway);
 
                 this.management.getVehicleId()
@@ -102,16 +121,7 @@ class DiagnosticsComponent
                         console.log('could not get vehicle ID', reason);
                     });
 
-                this.management.getHealth()
-                    .then(response => {
-                        // console.log(response);
-                        this.setState({
-                            diagnostics: response
-                        });
-                    })
-                    .catch(reason => {
-                        console.log('could not get health', reason);
-                    });
+                this._onRefresh();
             }
         });
     }
@@ -130,44 +140,71 @@ class DiagnosticsComponent
         const errorClass = css(styles.errorRow);
 
         return (
-            <Container>
-                <Row>
-                    <h3>Diagnostics</h3>
-                </Row>
-                <Row>
-                    <Table striped bordered hover size="sm" className={css(styles.table_styles)}>
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Online</th>
-                            <th>Healthy</th>
-                            <th>Data</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {this.state.diagnostics.map((entry, index) => {
-                            const healthDescriptor = getHealthDescriptor(entry.health);
-                            let rowClass = null;
-                            if (healthDescriptor.type === 'error') {
-                                rowClass = errorClass;
-                            }
-                            return (
-                                <tr key={index} className={rowClass}>
-                                    <td>{index + 1}</td>
-                                    <td>{entry.name}</td>
-                                    <td>{getSubStatusIcon(healthDescriptor.online)}</td>
-                                    <td>{getSubStatusIcon(healthDescriptor.healthy)}</td>
-                                    <td>{getSubStatusIcon(healthDescriptor.data)}</td>
-                                </tr>
-                            );
-                        })}
-                        </tbody>
-                    </Table>
-                </Row>
-            </Container>
+            <div className={css(styles.container)}>
+                <Navbar bg="light">
+                    <Navbar.Brand>Diagnostics</Navbar.Brand>
+                    <Navbar.Collapse className="justify-content-end">
+                        <ButtonToolbar>
+                            <Button title="Refresh"
+                                    size="sm"
+                                    onClick={this._onRefresh}
+                                    className="ml-1">
+                                <FontAwesomeIcon icon={faSync} color="white"/>
+                            </Button>
+                        </ButtonToolbar>
+                    </Navbar.Collapse>
+                </Navbar>
+                <div className={css(styles.content)}>
+                    <div className={css(styles.tableContainer)}>
+                        <Table striped bordered hover size="sm">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th className="text-center">Online</th>
+                                <th className="text-center">Healthy</th>
+                                <th className="text-center">Data</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {this.state.diagnostics.map((entry, index) => {
+                                const healthDescriptor = getHealthDescriptor(entry.health);
+                                let rowClass = null;
+                                if (healthDescriptor.type === 'error') {
+                                    rowClass = errorClass;
+                                }
+                                return (
+                                    <tr key={index} className={rowClass}>
+                                        <td>{index + 1}</td>
+                                        <td>{entry.name}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.online)}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.healthy)}</td>
+                                        <td className="text-center">{getSubStatusIcon(healthDescriptor.data)}</td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </Table>
+                    </div>
+                </div>
+            </div>
         );
     }
+
+    _onRefresh = function () {
+        this.management.getHealth()
+            .then(response => {
+                // console.log(response);
+                this.setState({
+                    diagnostics: response
+                });
+                toast.success("Diagnostics refreshed", TOAST_OPTIONS);
+            })
+            .catch(reason => {
+                console.log('could not get health', reason);
+                toast.error("Failed to refresh diagnostics", TOAST_OPTIONS);
+            });
+    }.bind(this);
 }
 
 export default DiagnosticsComponent;
