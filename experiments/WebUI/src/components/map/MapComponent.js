@@ -40,6 +40,8 @@ import MissionMapElement from "./MissionMapElement";
 import VehicleMapElement from "./VehicleMapElement";
 import VehicleTrailMapElement from "./VehicleTrailMapElement";
 
+import WindowManager from "../../lib/WindowManager";
+
 console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
 
 const tileUrl = process.env.REACT_APP_MAP_TILE_URL
@@ -312,8 +314,8 @@ class MapComponent
                 <div className={css(styles.toolbar)}>
                     <ButtonToolbar>
                         <ButtonGroup className="map-button-group">
-                            <ToolbarComponent onClick={this._openNewWindow}/>
-                            <Button onClick={this._onCloseAllChildWindows}>
+                            <ToolbarComponent onClick={this._openWindow}/>
+                            <Button onClick={this._onCloseAllWindows}>
                                 <FontAwesomeIcon icon={faWindowClose} title="Close all child windows"/>
                             </Button>
                         </ButtonGroup>
@@ -659,29 +661,14 @@ class MapComponent
 
     // ---- window management callbacks
 
-    _openNewWindow = function (item) {
-        const href = window.location.href;
-        const url = href.substring(0, href.lastIndexOf('/') + 1) + item;
-        const w = window.open(url, item,
-            "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
-        if (w) {
-            w.focus();
-        }
+    _openWindow = function (routeName) {
+        WindowManager.openWindow(routeName);
     }.bind(this);
 
     // ---- window management event handlers
 
-    _onCloseAllChildWindows = function (e) {
-        const windowsArr = ["Dashboard", "Diagnostics", "Sentuators", "ScriptControl"];
-        windowsArr.forEach((tab) => {
-            const href = window.location.href;
-            const url = href.substring(0, href.lastIndexOf('/') + 1) + tab;
-            const w = window.open(url, tab,
-                "width=600,height=600,menubar=0,toolbar=0,location=0,personalBar=0,status=0,resizable=1");
-            if (w) {
-                w.close();
-            }
-        });
+    _onCloseAllWindows = function (e) {
+        WindowManager.closeAllWindows();
     }.bind(this);
 
     // ---- operator commands event handlers
