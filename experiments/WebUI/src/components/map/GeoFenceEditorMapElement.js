@@ -1,11 +1,12 @@
 import React, {PureComponent} from "react";
-import {LayerGroup, Marker, Polygon, Popup} from "react-leaflet";
+import {LayerGroup, Marker, Polygon, Popup, Tooltip} from "react-leaflet";
 import {mapPin} from "../../assets/MapIcons";
 import CoordSysContext from "./CoordSysContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "react-bootstrap";
 import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
+import noIntersections from "shamos-hoey";
 
 const DEBUG = false;
 
@@ -24,6 +25,7 @@ class GeoFenceEditorMapElement
         this.state = {
             positions: positions,
             editStack: [this._clonePositions(positions)],
+            noIntersections: this._noIntersections(props.points),
         };
     }
 
@@ -39,7 +41,14 @@ class GeoFenceEditorMapElement
         return (
             <LayerGroup id={this.props.id}>
                 <Polygon positions={this.state.positions}
-                         color={this.props.color}/>
+                         color={this.props.color}
+                         dashArray={this.state.noIntersections ? null : "4"}>
+                    {!this.state.noIntersections && (
+                        <Tooltip permanent={true}>
+                            WARNING! Self-intersecting geofence
+                        </Tooltip>
+                    )}
+                </Polygon>
                 {this.state.positions.map(
                     (position, index) => {
                         const lat = position[0];
@@ -52,6 +61,7 @@ class GeoFenceEditorMapElement
                                 positions[index] = [e.latlng.lat, e.latlng.lng];
                                 this.setState({
                                     positions: [...positions],
+                                    noIntersections: this._noIntersections(positions),
                                 });
                             }
                         }.bind(this);
@@ -117,6 +127,7 @@ class GeoFenceEditorMapElement
         const oldPositions = this._clonePositions(editStack[editStack.length - 1]);
         this.setState({
             positions: oldPositions,
+            noIntersections: this._noIntersections(oldPositions),
             editStack: [...editStack],
         });
     }
@@ -125,9 +136,11 @@ class GeoFenceEditorMapElement
         if (!this.state.positions || !this.state.positions.length) {
             return;
         }
+        const positions = [];
         this.setState({
-            positions: [],
-            editStack: [...this.state.editStack, []],
+            positions: positions,
+            noIntersections: this._noIntersections(positions),
+            editStack: [...this.state.editStack, positions],
         });
     }
 
@@ -142,6 +155,7 @@ class GeoFenceEditorMapElement
         }
         this.setState({
             positions: [...positions],
+            noIntersections: this._noIntersections(positions),
             editStack: [...this.state.editStack, this._clonePositions(positions)],
         });
     }
@@ -175,6 +189,7 @@ class GeoFenceEditorMapElement
         positions.splice(index, 1);
         this.setState({
             positions: [...positions],
+            noIntersections: this._noIntersections(positions),
             editStack: [...this.state.editStack, this._clonePositions(positions)],
         });
     }
@@ -189,6 +204,17 @@ class GeoFenceEditorMapElement
 
     _clonePositions(positions) {
         return positions.map(position => Array.from(position));
+    }
+
+    _noIntersections(points) {
+        if (!points) {
+            return true;
+        }
+        const polygon = {
+            type: 'Polygon',
+            coordinates: [points],
+        };
+        return noIntersections(polygon);
     }
 }
 
