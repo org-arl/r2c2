@@ -890,12 +890,11 @@ class MapComponent
                 delete (updatedMission.updatedAt);
 
                 const missionDefinitions = this.state.missionDefinitions;
+                while (missionDefinitions.missions.length <= index) {
+                    missionDefinitions.missions.push(null);
+                }
                 if (index < missionDefinitions.missions.length) {
                     missionDefinitions.missions[index] = updatedMission;
-                } else {
-                    while (missionDefinitions.missions.length < index) {
-                        missionDefinitions.missions.push(updatedMission);
-                    }
                 }
                 missionDefinitions.missions = [...missionDefinitions.missions];
                 missionPlannerMissionDefinitions.missions[index] = updatedMission;
@@ -903,6 +902,7 @@ class MapComponent
 
                 this.setState({
                     missionDefinitions: {...missionDefinitions},
+                    mission: null,
 
                     missionPlannerMissionDefinitions: {...missionPlannerMissionDefinitions},
 
@@ -933,6 +933,8 @@ class MapComponent
 
                     this.setState({
                         missionDefinitions: {...missionDefinitions},
+                        mission: null,
+
                         missionPlannerMissionDefinitions: {...missionPlannerMissionDefinitions},
 
                         missionPlannerSelectedMissionIndex: -1,
