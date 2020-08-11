@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {PureComponent} from 'react'
 import {Container, ListGroup, Row} from 'react-bootstrap';
 import {FjageHelper} from "../../assets/fjageHelper.js";
 import {Management} from "../../assets/jc2.js";
@@ -8,7 +8,9 @@ import Select from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCheck, faTimes} from '@fortawesome/free-solid-svg-icons';
 
-class SentuatorsComponent extends React.Component {
+class SentuatorsComponent
+    extends PureComponent {
+
     constructor(props) {
         super(props);
         this.gateway = FjageHelper.getGateway();
