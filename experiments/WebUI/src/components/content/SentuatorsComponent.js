@@ -8,6 +8,8 @@ import Select from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCheck, faTimes} from '@fortawesome/free-solid-svg-icons';
 
+const TITLE = "Sentuators";
+
 class SentuatorsComponent
     extends PureComponent {
 
@@ -25,14 +27,15 @@ class SentuatorsComponent
     }
 
     componentDidMount() {
+        this._updateVehicleId(null);
+
         this.gateway.addConnListener((connected) => {
             if (connected) {
                 this.management = new Management(this.gateway);
 
                 this.management.getVehicleId()
                     .then(vehicleId => {
-                        console.log('vehicleId', vehicleId);
-                        this.vehicleId = vehicleId;
+                        this._updateVehicleId(vehicleId);
                     })
                     .catch(reason => {
                         console.log('could not get vehicle ID', reason);
@@ -91,11 +94,6 @@ class SentuatorsComponent
     }
 
     render() {
-        if (this.vehicleId) {
-            document.title = this.vehicleId + " Sentuators";
-        } else {
-            document.title = "Sentuators";
-        }
         var selectOptions = [];
 
         const tick = <FontAwesomeIcon icon={faCheck} color="green"/>;
@@ -171,6 +169,14 @@ class SentuatorsComponent
                 </Row>
             </Container>
         );
+    }
+
+    _updateVehicleId(vehicleId) {
+        if (vehicleId) {
+            document.title = vehicleId + " " + TITLE;
+        } else {
+            document.title = TITLE;
+        }
     }
 }
 
