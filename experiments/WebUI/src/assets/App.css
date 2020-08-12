@@ -43,23 +43,3 @@
 
 .mainBlockPushRight {
 }
-
-/* SentuatorsComponent */
-
-.select_styles {
-    width: 100%;
-}
-
-.sentuator_list {
-    font-size: 0.8em;
-    z-index: 0;
-    width: 90%;
-    height: 250px;
-    overflow-y: scroll;
-}
-
-.sentuator_container {
-    padding-top: 20px;
-    padding-left: 0 !important;
-    width: 50%;
-}

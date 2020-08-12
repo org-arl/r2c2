@@ -1,8 +1,8 @@
 import React, {PureComponent} from 'react'
 import {Button, ButtonToolbar, Navbar, Table} from 'react-bootstrap';
 
-import {FjageHelper} from "../../assets/fjageHelper.js";
-import {Management} from "../../assets/jc2.js";
+import {FjageHelper} from "../../lib/fjageHelper.js";
+import {Management} from "../../lib/jc2.js";
 import {css, StyleSheet} from 'aphrodite';
 
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'

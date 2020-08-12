@@ -1,6 +1,6 @@
 import React, {PureComponent} from "react";
 import {Circle, LayerGroup, Marker, Popup} from "react-leaflet";
-import {notReadyMarker, readyMarker} from "../../assets/MapIcons";
+import {notReadyMarker, readyMarker} from "../../lib/MapIcons";
 import CoordSysContext from "./CoordSysContext";
 import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
 

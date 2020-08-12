@@ -2,11 +2,11 @@ import React from 'react';
 import '../assets/App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import DashboardComponent from './content/DashboardComponent';
-import DiagnosticsComponent from './content/DiagnosticsComponent';
+import DashboardComponent from './dashboard/DashboardComponent';
+import DiagnosticsComponent from './diagnostics/DiagnosticsComponent';
 import MapComponent from './map/MapComponent';
 import ScriptControl from './script/ScriptControl';
-import SentuatorsComponent from './content/SentuatorsComponent';
+import SentuatorsComponent from './sentuators/SentuatorsComponent';
 
 import {HashRouter, Route, Switch} from 'react-router-dom';
 

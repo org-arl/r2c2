@@ -1,8 +1,8 @@
 import React, {PureComponent} from 'react'
 
 import {faDownload, faPlay, faUpload} from "@fortawesome/free-solid-svg-icons";
-import {FjageHelper} from "../../assets/fjageHelper.js";
-import {Management} from "../../assets/jc2.js";
+import {FjageHelper} from "../../lib/fjageHelper.js";
+import {Management} from "../../lib/jc2.js";
 import {css, StyleSheet} from 'aphrodite';
 
 import {SplitPane} from "react-collapse-pane";

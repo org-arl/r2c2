@@ -25,9 +25,9 @@ import {toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import pathIcon from '../../assets/img/path.svg';
 
-import CoordSys from "../../assets/CoordSys";
-import {FjageHelper} from "../../assets/fjageHelper";
-import {Management} from "../../assets/jc2";
+import CoordSys from "../../lib/CoordSys";
+import {FjageHelper} from "../../lib/fjageHelper";
+import {Management} from "../../lib/jc2";
 
 import ToolbarComponent from "../ToolbarComponent";
 

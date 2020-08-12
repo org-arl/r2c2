@@ -1,8 +1,8 @@
 import React, {PureComponent} from 'react'
 import {Button, ButtonToolbar, Dropdown, Form, Navbar, Tab, Table, Tabs} from 'react-bootstrap';
 import Dialog from "react-bootstrap-dialog";
-import {FjageHelper} from "../../assets/fjageHelper.js";
-import {Management} from "../../assets/jc2.js";
+import {FjageHelper} from "../../lib/fjageHelper.js";
+import {Management} from "../../lib/jc2.js";
 import {toast} from 'react-toastify';
 
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
