@@ -6,7 +6,7 @@ import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
 const DEBUG = false;
 
 /**
- * Props: id, color, maxSize, hidden
+ * Props: id, color, maxSize, minDistance, hidden
  */
 class VehicleTrailMapElement
     extends PureComponent {
@@ -18,6 +18,7 @@ class VehicleTrailMapElement
 
         this.state = {
             positions: [],
+            lastPoint: null,
         };
     }
 
@@ -44,13 +45,22 @@ class VehicleTrailMapElement
             return;
         }
         const positions = this.state.positions;
+        if (this.state.lastPoint && this.props.minDistance) {
+            const dx = this.state.lastPoint.x - point.x;
+            const dy = this.state.lastPoint.y - point.y;
+            const distance = Math.sqrt((dx * dx) + (dy * dy));
+            if (distance < this.props.minDistance) {
+                return;
+            }
+        }
         positions.push([coordSys.locy2lat(point.y), coordSys.locx2long(point.x)]);
-        // TODO Improve point culling
-        if (positions.length > this.props.maxSize) {
-            positions.splice(0, positions.length - this.props.maxSize);
+        const size = positions.length;
+        if (size > this.props.maxSize) {
+            positions.splice(0, size - this.props.maxSize);
         }
         this.setState({
             positions: [...positions],
+            lastPoint: point,
         });
     }
 }
