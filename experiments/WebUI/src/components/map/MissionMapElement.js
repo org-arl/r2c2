@@ -1,6 +1,6 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polyline, Popup} from "react-leaflet";
-import {mapPin} from "../../assets/MapIcons";
+import {mapPin} from "../../lib/MapIcons";
 import CoordSysContext from "./CoordSysContext";
 import {checkComponentDidUpdate} from "../../lib/react-debug-utils";
 

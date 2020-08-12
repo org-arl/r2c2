@@ -1,6 +1,6 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polygon, Popup, Tooltip} from "react-leaflet";
-import {mapPin} from "../../assets/MapIcons";
+import {mapPin} from "../../lib/MapIcons";
 import CoordSysContext from "./CoordSysContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-solid-svg-icons";

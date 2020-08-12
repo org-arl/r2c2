@@ -1,6 +1,6 @@
 import React, {PureComponent} from "react";
 import {LayerGroup, Marker, Polyline} from "react-leaflet";
-import {mapPin, mapPinSelected} from "../../../assets/MapIcons";
+import {mapPin, mapPinSelected} from "../../../lib/MapIcons";
 import {checkComponentDidUpdate} from "../../../lib/react-debug-utils";
 
 const DEBUG = true;
