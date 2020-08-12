@@ -140,7 +140,7 @@ class MapComponent
 
             cursorPosition: null,
 
-            vehiclePositionLocal: null,
+            vehicleStatus: null,
             vehicleErrorRadius: 60,
             vehicleReady: false,
 
@@ -176,9 +176,13 @@ class MapComponent
                 this.gateway.subscribe(this.gateway.topic('org.arl.jc2.enums.C2Topics.MISSIONSTATUS'));
                 this.gateway.addMessageListener((msg) => {
                     if (msg.__clazz__ === 'org.arl.jc2.messages.VehicleStatus') {
-                        this._updateVehiclePosition({
-                            x: msg.pos.x,
-                            y: msg.pos.y,
+                        this._updateVehicleStatus({
+                            point: {
+                                x: msg.pos.x,
+                                y: msg.pos.y,
+                            },
+                            bearing: msg.bearing,
+                            speed: msg.speed,
                         });
                     } else if (msg.__clazz__ === 'org.arl.jc2.messages.MissionStatusNtf') {
                         console.log(msg);
@@ -305,11 +309,12 @@ class MapComponent
                                             ref={this.vehicleTrailRef}
                                             hidden={(!inNormalMode && !inMissionPlanner) || !this.state.displayVehiclePath}
                                             color="yellow"
-                                            maxSize={1000}/>
+                                            maxSize={1000}
+                                            minDistance={2.0}/>
 
                     {this.state.displayVehicle && (
                         <VehicleMapElement id="vehicle"
-                                           point={this.state.vehiclePositionLocal}
+                                           status={this.state.vehicleStatus}
                                            errorRadius={this.state.vehicleErrorRadius}
                                            ready={this.state.vehicleReady}/>
                     )}
@@ -525,12 +530,12 @@ class MapComponent
         });
     }
 
-    _updateVehiclePosition(point) {
+    _updateVehicleStatus(status) {
         this.setState({
-            vehiclePositionLocal: point,
+            vehicleStatus: status,
         });
         if (this.vehicleTrailRef.current) {
-            this.vehicleTrailRef.current.addPoint(point);
+            this.vehicleTrailRef.current.addPoint(status.point);
         }
         this._checkVehicleReadiness();
     }
@@ -547,8 +552,8 @@ class MapComponent
                 points.push(...localBounds);
             }
         }
-        if (this.state.vehiclePositionLocal) {
-            points.push([this.state.vehiclePositionLocal.x, this.state.vehiclePositionLocal.y]);
+        if (this.state.vehicleStatus && this.state.vehicleStatus.point) {
+            points.push([this.state.vehicleStatus.point.x, this.state.vehicleStatus.point.y]);
         }
         if (points.length > 1) {
             const localBounds = this._getBounds(points);
@@ -993,11 +998,11 @@ class MapComponent
     // TODO Not the actual vehicle readiness check
     _checkVehicleReadiness() {
         if (this.state.vehicleReady) {
-            if (!this.state.coordSys || !this.state.vehiclePositionLocal) {
+            if (!this.state.coordSys || !this.state.vehicleStatus) {
                 this._setVehicleNotReady();
             }
         } else {
-            if (this.state.coordSys && this.state.vehiclePositionLocal) {
+            if (this.state.coordSys && this.state.vehicleStatus) {
                 this._setVehicleReady();
             }
         }
