@@ -69,7 +69,7 @@ class ScriptControl
     }
 
     componentDidMount() {
-        document.title = TITLE;
+        this._updateVehicleId(null);
 
         this.gateway.addConnListener((connected) => {
             if (connected) {
@@ -98,7 +98,7 @@ class ScriptControl
                        initialSizes={this.state.initialSizes}>
                 <div className={css(styles.container)}>
                     <Navbar bg="light">
-                        <Navbar.Brand>Script Control</Navbar.Brand>
+                        <Navbar.Brand>{TITLE}</Navbar.Brand>
                         <Navbar.Collapse className="justify-content-end">
                             <ButtonToolbar>
                                 <Button title="Load script from vehicle"
