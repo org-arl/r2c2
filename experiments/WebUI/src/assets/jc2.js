@@ -467,6 +467,28 @@ export class Management {
                 });
             });
     }
+
+    setActuator(sentuatorName, actuatorType, value) {
+        return this._waitForReady()
+            .then(management => {
+                return new Promise((resolve, reject) => {
+                    const request = new SetActuatorReq({
+                        recipient: this._managementAgentId,
+                        sentuatorName: sentuatorName,
+                        actuatorType: actuatorType,
+                        value: value,
+                    });
+                    this._gateway.request(request)
+                        .then(response => {
+                            if (response.perf === Performative.INFORM) {
+                                resolve(response.perf);
+                            } else {
+                                reject(response.perf);
+                            }
+                        });
+                });
+            });
+    }
 }
 
 // ----
@@ -703,5 +725,17 @@ export class GetDashboardReq extends AbstractRequest {
      */
     constructor(params) {
         super('org.arl.jc2.messages.management.GetDashboardReq', params);
+    }
+}
+
+export class SetActuatorReq extends AbstractRequest {
+
+    /**
+     * Constructs a SetActuatorReq message.
+     *
+     * @param {Object} params parameters.
+     */
+    constructor(params) {
+        super('org.arl.jc2.messages.management.SetActuatorReq', params);
     }
 }
