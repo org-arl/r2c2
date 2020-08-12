@@ -44,11 +44,18 @@ import VehicleTrailMapElement from "./VehicleTrailMapElement";
 
 import WindowManager from "../../lib/WindowManager";
 
-console.log('process.env.REACT_APP_MAP_TILE_URL', process.env.REACT_APP_MAP_TILE_URL);
+const MAP_ONLINE_CONFIG = {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    maxNativeZoom: 19,
+};
+const MAP_OFFLINE_CONFIG = {
+    url: process.env.PUBLIC_URL + '/osm/tiles/{z}/{x}/{y}.png',
+    maxNativeZoom: 17,
+};
 
-const tileUrl = process.env.REACT_APP_MAP_TILE_URL
-    ? process.env.REACT_APP_MAP_TILE_URL
-    : process.env.PUBLIC_URL + '/osm/tiles/{z}/{x}/{y}.png';
+const mapConfig = process.env.REACT_APP_MAP_ONLINE ? MAP_ONLINE_CONFIG : MAP_OFFLINE_CONFIG;
+
+console.log('mapConfig', mapConfig);
 
 const styles = StyleSheet.create({
     toolbar: {
@@ -269,9 +276,10 @@ class MapComponent
                             onMouseMove={this._onMapMouseMove}>
                     <TileLayer
                         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                        url={tileUrl}
+                        url={mapConfig.url}
+                        maxNativeZoom={mapConfig.maxNativeZoom}
                         minZoom={1}
-                        maxZoom={17}
+                        maxZoom={20}
                     />
 
                     {(inNormalMode || inMissionPlanner) && this.state.displayGeoFence && (
@@ -334,7 +342,7 @@ class MapComponent
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                         {this.state.missionDefinitions && this.state.missionDefinitions.missions.map((mission, index) => (
-                                            <Dropdown.Item>
+                                            <Dropdown.Item key={index}>
                                                 <span className="mr-4">#{index + 1}</span>
                                                 <Button onClick={(e) => this._onViewMission(e, mission, index)}
                                                         title="View"
@@ -882,12 +890,11 @@ class MapComponent
                 delete (updatedMission.updatedAt);
 
                 const missionDefinitions = this.state.missionDefinitions;
+                while (missionDefinitions.missions.length <= index) {
+                    missionDefinitions.missions.push(null);
+                }
                 if (index < missionDefinitions.missions.length) {
                     missionDefinitions.missions[index] = updatedMission;
-                } else {
-                    while (missionDefinitions.missions.length < index) {
-                        missionDefinitions.missions.push(updatedMission);
-                    }
                 }
                 missionDefinitions.missions = [...missionDefinitions.missions];
                 missionPlannerMissionDefinitions.missions[index] = updatedMission;
@@ -895,6 +902,7 @@ class MapComponent
 
                 this.setState({
                     missionDefinitions: {...missionDefinitions},
+                    mission: null,
 
                     missionPlannerMissionDefinitions: {...missionPlannerMissionDefinitions},
 
@@ -925,6 +933,8 @@ class MapComponent
 
                     this.setState({
                         missionDefinitions: {...missionDefinitions},
+                        mission: null,
+
                         missionPlannerMissionDefinitions: {...missionPlannerMissionDefinitions},
 
                         missionPlannerSelectedMissionIndex: -1,

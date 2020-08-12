@@ -22,7 +22,8 @@
     "react-leaflet": "^2.7.0",
     "react-resize-detector": "^5.0.6",
     "react-router-dom": "^5.2.0",
-    "react-toastify": "^6.0.8"
+    "react-toastify": "^6.0.8",
+    "shamos-hoey": "^1.1.0"
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
