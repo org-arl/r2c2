@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {PureComponent} from 'react'
 import {Button, ButtonToolbar, Navbar, Table} from 'react-bootstrap';
 
 import {FjageHelper} from "../../assets/fjageHelper.js";
@@ -8,6 +8,8 @@ import {css, StyleSheet} from 'aphrodite';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faCheck, faSync, faTimes} from '@fortawesome/free-solid-svg-icons'
 import {toast} from "react-toastify";
+
+const TITLE = "Diagnostics";
 
 toast.configure();
 
@@ -95,7 +97,7 @@ function getSubStatusIcon(value) {
 }
 
 class DiagnosticsComponent
-    extends React.Component {
+    extends PureComponent {
 
     constructor(props, context) {
         super(props, context);
@@ -108,14 +110,15 @@ class DiagnosticsComponent
     }
 
     componentDidMount() {
+        this._updateVehicleId(null);
+
         this.gateway.addConnListener((connected) => {
             if (connected) {
                 this.management = new Management(this.gateway);
 
                 this.management.getVehicleId()
                     .then(vehicleId => {
-                        console.log('vehicleId', vehicleId);
-                        this.vehicleId = vehicleId;
+                        this._updateVehicleId(vehicleId);
                     })
                     .catch(reason => {
                         console.log('could not get vehicle ID', reason);
@@ -131,18 +134,12 @@ class DiagnosticsComponent
     }
 
     render() {
-        if (this.vehicleId) {
-            document.title = this.vehicleId + " Diagnostics";
-        } else {
-            document.title = "Diagnostics";
-        }
-
         const errorClass = css(styles.errorRow);
 
         return (
             <div className={css(styles.container)}>
                 <Navbar bg="light">
-                    <Navbar.Brand>Diagnostics</Navbar.Brand>
+                    <Navbar.Brand>{TITLE}</Navbar.Brand>
                     <Navbar.Collapse className="justify-content-end">
                         <ButtonToolbar>
                             <Button title="Refresh"
@@ -205,6 +202,14 @@ class DiagnosticsComponent
                 toast.error("Failed to refresh diagnostics", TOAST_OPTIONS);
             });
     }.bind(this);
+
+    _updateVehicleId(vehicleId) {
+        if (vehicleId) {
+            document.title = vehicleId + " " + TITLE;
+        } else {
+            document.title = TITLE;
+        }
+    }
 }
 
 export default DiagnosticsComponent;

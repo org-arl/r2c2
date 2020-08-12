@@ -11,11 +11,25 @@ import FrontIcon from "../../assets/img/submarine-front-view.svg";
 import D3BearingComponent from "./D3BearingComponent";
 import D3GaugeComponent from "./D3GaugeComponent";
 
+const TITLE = "Dashboard";
+
 const styles = StyleSheet.create({
-    container0: {
-        padding: "1em",
-    },
     container: {
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    },
+    content: {
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: "auto",
+        height: "100%",
+        overflowX: "auto",
+        overflowY: "auto",
+    },
+    gaugesContainer: {
+        padding: "1em",
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
@@ -154,9 +168,9 @@ class DashboardComponent
 
     render() {
         return (
-            <div>
+            <div className={css(styles.container)}>
                 <Navbar bg="light">
-                    <Navbar.Brand>Dashboard</Navbar.Brand>
+                    <Navbar.Brand>{TITLE}</Navbar.Brand>
                     <Navbar.Collapse className="justify-content-end">
                         <ButtonToolbar>
                             <Button title="Refresh"
@@ -168,10 +182,10 @@ class DashboardComponent
                         </ButtonToolbar>
                     </Navbar.Collapse>
                 </Navbar>
-                <div className={css(styles.container0)}>
+                <div className={css(styles.content)}>
                     <HotKeys keyMap={this.keyMap}
                              handlers={this.hotkeyHandlers}>
-                        <div className={css(styles.container)}>
+                        <div className={css(styles.gaugesContainer)}>
                             <div className={css(styles.gaugeContainer)}>
                                 <D3AngularComponent title="Roll"
                                                     ref="Roll"
@@ -284,9 +298,9 @@ class DashboardComponent
 
     _updateVehicleId(vehicleId) {
         if (vehicleId) {
-            document.title = vehicleId + " Dashboard";
+            document.title = vehicleId + " " + TITLE;
         } else {
-            document.title = "Dashboard";
+            document.title = TITLE;
         }
     }
 
