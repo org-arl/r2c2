@@ -1,13 +1,22 @@
 import React, {PureComponent} from 'react'
 import {Button, ButtonToolbar, Dropdown, Form, Navbar, Tab, Table, Tabs} from 'react-bootstrap';
+import Dialog from "react-bootstrap-dialog";
 import {FjageHelper} from "../../assets/fjageHelper.js";
 import {Management} from "../../assets/jc2.js";
+import {toast} from 'react-toastify';
 
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faCheck, faEllipsisH, faHeartBroken, faSync, faTimes} from '@fortawesome/free-solid-svg-icons';
+import {faCheck, faEdit, faEllipsisH, faEye, faHeartBroken, faSync, faTimes} from '@fortawesome/free-solid-svg-icons';
 import {css, StyleSheet} from "aphrodite";
 
 const TITLE = "Sentuators";
+
+toast.configure();
+
+const TOAST_OPTIONS = {
+    position: toast.POSITION.BOTTOM_RIGHT,
+    autoClose: true,
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -150,7 +159,7 @@ class SentuatorsComponent
                                             <tr>
                                                 <th>Name</th>
                                                 <th className="text-center">Health</th>
-                                                <th className="text-center"></th>
+                                                <th className="text-center"><FontAwesomeIcon icon={faEye}/></th>
                                                 <th className="text-left">Values</th>
                                             </tr>
                                             </thead>
@@ -194,6 +203,7 @@ class SentuatorsComponent
                                             <tr>
                                                 <th>Name</th>
                                                 <th className="text-center">Health</th>
+                                                <th className="text-center"></th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -201,6 +211,13 @@ class SentuatorsComponent
                                                 <tr key={index}>
                                                     <td>{actuator.name}</td>
                                                     <td className="text-center">{this._getHealthComponent(this.state.actuatorHealthMap[actuator.name])}</td>
+                                                    <td className="text-center">
+                                                        <Button title="Set" size="sm"
+                                                                onClick={(e) => this._onSetActuatorRequested(actuator)}>
+                                                            <FontAwesomeIcon icon={faEdit}
+                                                                             color="white"/>
+                                                        </Button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                             </tbody>
@@ -211,6 +228,9 @@ class SentuatorsComponent
                         </Tabs>
                     )}
                 </div>
+                <Dialog ref={(component) => {
+                    this.dialog = component
+                }}/>
             </div>
         );
     }
@@ -264,7 +284,36 @@ class SentuatorsComponent
         }
     }
 
+    _onSetActuatorRequested(actuator) {
+        this.dialog.show({
+            body: actuator.name,
+            prompt: Dialog.TextPrompt({
+                required: true,
+            }),
+            actions: [
+                Dialog.CancelAction(),
+                Dialog.OKAction((dialog) => {
+                    this._setActuatorValue(actuator, dialog.value);
+                })
+            ]
+        })
+    }
+
     // ----
+
+    _setActuatorValue(actuator, value) {
+        console.log('_setActuatorValue', actuator, value);
+        if (!this.state.selectedSentuator) {
+            return;
+        }
+        this.management.setActuator(this.state.selectedSentuator.name, actuator.type, value)
+            .then(response => {
+                toast.success("Actuator value set: " + actuator.name + " = " + value, TOAST_OPTIONS);
+            })
+            .catch(reason => {
+                toast.error("Failed to set actuator value: " + actuator.name, TOAST_OPTIONS);
+            })
+    }
 
     _getMeasurement(sensorName, maxAge = 1.0) {
         if (!this.state.selectedSentuator) {
