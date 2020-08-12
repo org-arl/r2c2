@@ -13,6 +13,7 @@ import {
     faRoute,
     faSatellite,
     faSave,
+    faShoePrints,
     faTimes,
     faTrashAlt,
     faUndo,
@@ -385,8 +386,7 @@ class MapComponent
                                     </Button>
                                     <Button active={this.state.displayVehiclePath}
                                             onClick={this._onToggleVehiclePath}>
-                                        <img title="Toggle vehicle path" src={pathIcon} height={20} width={20}
-                                             alt="Toggle vehicle path"/>
+                                        <FontAwesomeIcon icon={faShoePrints} title="Toggle vehicle path"/>
                                     </Button>
                                 </Fragment>
                             )}
