@@ -1,6 +1,6 @@
 plugins {
     base
-    id("com.github.node-gradle.node") version "2.2.3"
+    id("com.github.node-gradle.node") version "2.2.4"
 }
 
 tasks {
