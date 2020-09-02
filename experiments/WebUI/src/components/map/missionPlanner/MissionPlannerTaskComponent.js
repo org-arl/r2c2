@@ -50,7 +50,7 @@ function _toForm(task) {
     if (taskDefinition !== null) {
         form.type = taskDefinition.name;
         taskDefinition.props.forEach((prop) => {
-            const value = ('properties' in task) && (prop.name in task.properties)
+            const value = ('properties' in task) && task.properties && (prop.name in task.properties)
                 ? task.properties[prop.name] : '';
             form.properties[prop.name] = {
                 type: prop.type,
@@ -59,7 +59,7 @@ function _toForm(task) {
         });
     }
     StarfishMissions.getParameters().forEach((parameter) => {
-        const value = ('parameters' in task) && (parameter.name in task.parameters)
+        const value = ('parameters' in task) && task.parameters && (parameter.name in task.parameters)
             ? task.parameters[parameter.name] : '';
         form.parameters[parameter.name] = {
             type: parameter.type,
@@ -67,7 +67,7 @@ function _toForm(task) {
         };
     });
     StarfishMissions.getPayloads().forEach((payload) => {
-        const value = ('payloads' in task) && (payload in task.payloads)
+        const value = ('payloads' in task) && task.payloads && (payload in task.payloads)
             ? task.payloads[payload] : '';
         form.payloads[payload] = {
             type: TYPES.INT,
