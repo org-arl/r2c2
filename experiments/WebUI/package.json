@@ -9,7 +9,7 @@
     "@fortawesome/react-fontawesome": "^0.1.11",
     "ace-builds": "^1.4.12",
     "aphrodite": "^2.4.0",
-    "bootstrap": "^4.5.0",
+    "bootstrap": "^5.0.0",
     "d3": "^5.16.0",
     "leaflet": "^1.6.0",
     "pts": "^0.9.4",
